@@ -5,15 +5,14 @@
 //  Created by Christina Moser on 25.11.25.
 //
 
+import DataProvider
 import SwiftUI
 import SwiftData
 
 @main
 struct H2OeApp: App {
     var sharedModelContainer: ModelContainer = {
-        let schema = Schema([
-            Item.self,
-        ])
+        let schema = Schema(CurrentScheme.models)
         let modelConfiguration = ModelConfiguration(schema: schema, isStoredInMemoryOnly: false)
 
         do {
@@ -26,6 +25,7 @@ struct H2OeApp: App {
     var body: some Scene {
         WindowGroup {
             ContentView()
+                .environment(\.createDataHandler, makeDataHandlerFactory(using: sharedModelContainer))
         }
         .modelContainer(sharedModelContainer)
     }

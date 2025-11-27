@@ -6,6 +6,11 @@
 	objectVersion = 77;
 	objects = {
 
+/* Begin PBXBuildFile section */
+		1DFA12862ED8D86200B189B6 /* DataProvider in Frameworks */ = {isa = PBXBuildFile; productRef = 1DFA12852ED8D86200B189B6 /* DataProvider */; };
+		1DFA128C2ED8DC1000B189B6 /* Networking in Frameworks */ = {isa = PBXBuildFile; productRef = 1DFA128B2ED8DC1000B189B6 /* Networking */; };
+/* End PBXBuildFile section */
+
 /* Begin PBXContainerItemProxy section */
 		1D25312F2ED5F33000913DD5 /* PBXContainerItemProxy */ = {
 			isa = PBXContainerItemProxy;
@@ -27,8 +32,6 @@
 		1D25311F2ED5F32F00913DD5 /* H2Oe.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = H2Oe.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		1D25312E2ED5F33000913DD5 /* H2OeTests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = H2OeTests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
 		1D2531382ED5F33000913DD5 /* H2OeUITests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = H2OeUITests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
-		1D25314B2ED5F49900913DD5 /* NetworkingPackage */ = {isa = PBXFileReference; lastKnownFileType = wrapper; name = NetworkingPackage; path = ../NetworkingPackage; sourceTree = SOURCE_ROOT; };
-		1D25314D2ED5F63D00913DD5 /* ReusableUIComponentsPackage */ = {isa = PBXFileReference; lastKnownFileType = wrapper; name = ReusableUIComponentsPackage; path = ../ReusableUIComponentsPackage; sourceTree = SOURCE_ROOT; };
 /* End PBXFileReference section */
 
 /* Begin PBXFileSystemSynchronizedRootGroup section */
@@ -54,6 +57,8 @@
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				1DFA128C2ED8DC1000B189B6 /* Networking in Frameworks */,
+				1DFA12862ED8D86200B189B6 /* DataProvider in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -77,11 +82,10 @@
 		1D2531162ED5F32F00913DD5 = {
 			isa = PBXGroup;
 			children = (
-				1D25314D2ED5F63D00913DD5 /* ReusableUIComponentsPackage */,
-				1D25314B2ED5F49900913DD5 /* NetworkingPackage */,
 				1D2531212ED5F32F00913DD5 /* H2Oe */,
 				1D2531312ED5F33000913DD5 /* H2OeTests */,
 				1D25313B2ED5F33000913DD5 /* H2OeUITests */,
+				1DFA12582ED8D2A200B189B6 /* Frameworks */,
 				1D2531202ED5F32F00913DD5 /* Products */,
 			);
 			sourceTree = "<group>";
@@ -94,6 +98,13 @@
 				1D2531382ED5F33000913DD5 /* H2OeUITests.xctest */,
 			);
 			name = Products;
+			sourceTree = "<group>";
+		};
+		1DFA12582ED8D2A200B189B6 /* Frameworks */ = {
+			isa = PBXGroup;
+			children = (
+			);
+			name = Frameworks;
 			sourceTree = "<group>";
 		};
 /* End PBXGroup section */
@@ -116,6 +127,8 @@
 			);
 			name = H2Oe;
 			packageProductDependencies = (
+				1DFA12852ED8D86200B189B6 /* DataProvider */,
+				1DFA128B2ED8DC1000B189B6 /* Networking */,
 			);
 			productName = H2Oe;
 			productReference = 1D25311F2ED5F32F00913DD5 /* H2Oe.app */;
@@ -199,6 +212,10 @@
 			);
 			mainGroup = 1D2531162ED5F32F00913DD5;
 			minimizedProjectReferenceProxies = 1;
+			packageReferences = (
+				1DFA12842ED8D84900B189B6 /* XCLocalSwiftPackageReference "../DataProvider" */,
+				1DFA128A2ED8DBFF00B189B6 /* XCLocalSwiftPackageReference "../Networking" */,
+			);
 			preferredProjectObjectVersion = 77;
 			productRefGroup = 1D2531202ED5F32F00913DD5 /* Products */;
 			projectDirPath = "";
@@ -582,6 +599,30 @@
 			defaultConfigurationName = Release;
 		};
 /* End XCConfigurationList section */
+
+/* Begin XCLocalSwiftPackageReference section */
+		1DFA12842ED8D84900B189B6 /* XCLocalSwiftPackageReference "../DataProvider" */ = {
+			isa = XCLocalSwiftPackageReference;
+			relativePath = ../DataProvider;
+		};
+		1DFA128A2ED8DBFF00B189B6 /* XCLocalSwiftPackageReference "../Networking" */ = {
+			isa = XCLocalSwiftPackageReference;
+			relativePath = ../Networking;
+		};
+/* End XCLocalSwiftPackageReference section */
+
+/* Begin XCSwiftPackageProductDependency section */
+		1DFA12852ED8D86200B189B6 /* DataProvider */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = 1DFA12842ED8D84900B189B6 /* XCLocalSwiftPackageReference "../DataProvider" */;
+			productName = DataProvider;
+		};
+		1DFA128B2ED8DC1000B189B6 /* Networking */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = 1DFA128A2ED8DBFF00B189B6 /* XCLocalSwiftPackageReference "../Networking" */;
+			productName = Networking;
+		};
+/* End XCSwiftPackageProductDependency section */
 	};
 	rootObject = 1D2531172ED5F32F00913DD5 /* Project object */;
 }

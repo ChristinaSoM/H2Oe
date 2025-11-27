@@ -7,55 +7,83 @@
 
 import SwiftUI
 import SwiftData
+import DataProvider
 
 struct ContentView: View {
     @Environment(\.modelContext) private var modelContext
-    @Query private var items: [Item]
+    @Environment(\.createDataHandler) private var createDataHandler
+    @Query(sort: \Item.createTimestamp, animation: .smooth) private var items: [Item]
+
 
     var body: some View {
-        NavigationSplitView {
-            List {
-                ForEach(items) { item in
-                    NavigationLink {
-                        Text("Item at \(item.timestamp, format: Date.FormatStyle(date: .numeric, time: .standard))")
-                    } label: {
-                        Text(item.timestamp, format: Date.FormatStyle(date: .numeric, time: .standard))
+        VStack {
+            NavigationSplitView {
+                List {
+                    ForEach(items) { item in
+                        // VStack {
+                        //Text("\(item.timestamp.timeIntervalSince1970)")
+                        // ItemView(item: item) // don't change after update
+                        // }
+                        NavigationLink {
+                            Text("Item at \(item.timestamp, format: Date.FormatStyle(date: .numeric, time: .standard))")
+                        } label: {
+                            Text(item.timestamp, format: Date.FormatStyle(date: .numeric, time: .standard))
+                        }
+                    }
+                    .onDelete(perform: deleteItems)
+                }
+                .toolbar {
+                    ToolbarItem(placement: .navigationBarTrailing) {
+                        EditButton()
+                    }
+                    ToolbarItem {
+                        Button(action: addItem) {
+                            Label("Add Item", systemImage: "plus")
+                        }
                     }
                 }
-                .onDelete(perform: deleteItems)
+            } detail: {
+                Text("Select an item")
             }
-            .toolbar {
-                ToolbarItem(placement: .navigationBarTrailing) {
-                    EditButton()
-                }
-                ToolbarItem {
-                    Button(action: addItem) {
-                        Label("Add Item", systemImage: "plus")
-                    }
-                }
+            
+            Spacer()
+            
+            VStack {
+                Text("Total items: \(items.count)")
+                
+                Spacer()
+                
+                // add MapView here
+                MapView()
             }
-        } detail: {
-            Text("Select an item")
         }
     }
 
+    @MainActor
     private func addItem() {
-        withAnimation {
-            let newItem = Item(timestamp: Date())
-            modelContext.insert(newItem)
+      let createDataHandler = createDataHandler
+      Task.detached {
+        if let dataHandler = await createDataHandler() {
+          try await dataHandler.newItem(date: .now)
         }
+      }
     }
 
-    private func deleteItems(offsets: IndexSet) {
-        withAnimation {
-            for index in offsets {
-                modelContext.delete(items[index])
-            }
+    @MainActor
+    private func deleteItems(_ offsets: IndexSet) {
+        for index in offsets {
+            let item = items[index]
+            modelContext.delete(item)
+        }
+        do {
+            try modelContext.save()
+        } catch {
+            print("Failed to save context after deletion: \(error)")
         }
     }
 }
 
 #Preview {
     ContentView()
-        .modelContainer(for: Item.self, inMemory: true)
+        .modelContainer(DataProvider.previewContainer)
 }
