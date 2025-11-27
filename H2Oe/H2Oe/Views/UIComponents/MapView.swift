@@ -22,46 +22,44 @@ struct MapView: View {
     ]
     
     var body: some View {
-        Map(position: $position) {
-            ForEach(locations) { location in
-                Marker(location.name, coordinate: location.coordinate)
-                
-                Annotation(location.name, coordinate: location.coordinate) {
-                    Text(location.name)
-                        .font(.headline)
-                        .padding()
-                        .background(.blue)
-                        .foregroundStyle(.white)
-                        .clipShape(.capsule)
-                }
-                .annotationTitles(.hidden)
-            }
-            
-        }
-            .edgesIgnoringSafeArea(.all)
-        
-        HStack(spacing: 50) {
-            Button("Paris") {
-                position = MapCameraPosition.region(
-                    MKCoordinateRegion(
-                        center: CLLocationCoordinate2D(latitude: 48.8566, longitude: 2.3522),
-                        span: MKCoordinateSpan(latitudeDelta: 1, longitudeDelta: 1)
-                    )
-                )
-            }
+        VStack(spacing: 8) {
+            Map(position: $position) {
+                ForEach(locations) { location in
+                    Marker(location.name, coordinate: location.coordinate)
 
-            Button("Tokyo") {
-                position = MapCameraPosition.region(
-                    MKCoordinateRegion(
-                        center: CLLocationCoordinate2D(latitude: 35.6897, longitude: 139.6922),
-                        span: MKCoordinateSpan(latitudeDelta: 1, longitudeDelta: 1)
-                    )
-                )
+                    Annotation(location.name, coordinate: location.coordinate) {
+                        Text(location.name)
+                            .font(.headline)
+                            .padding()
+                            .background(.blue)
+                            .foregroundStyle(.white)
+                            .clipShape(.capsule)
+                    }
+                    .annotationTitles(.hidden)
+                }
             }
+            .ignoresSafeArea(.container, edges: .all)
+
+            HStack(spacing: 50) {
+                Button("Paris") {
+                    position = MapCameraPosition.region(
+                        MKCoordinateRegion(
+                            center: CLLocationCoordinate2D(latitude: 48.8566, longitude: 2.3522),
+                            span: MKCoordinateSpan(latitudeDelta: 1, longitudeDelta: 1)
+                        )
+                    )
+                }
+
+                Button("Tokyo") {
+                    position = MapCameraPosition.region(
+                        MKCoordinateRegion(
+                            center: CLLocationCoordinate2D(latitude: 35.6897, longitude: 139.6922),
+                            span: MKCoordinateSpan(latitudeDelta: 1, longitudeDelta: 1)
+                        )
+                    )
+                }
+            }
+            .padding(.bottom, 8)
         }
     }
-    
-    
-    
-    
 }

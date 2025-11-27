@@ -1,10 +1,3 @@
-//
-//  H2OeApp.swift
-//  H2Oe
-//
-//  Created by Christina Moser on 25.11.25.
-//
-
 import DataProvider
 import SwiftUI
 import SwiftData
@@ -24,8 +17,9 @@ struct H2OeApp: App {
 
     var body: some Scene {
         WindowGroup {
-            ContentView()
-                .environment(\.createDataHandler, makeDataHandlerFactory(using: sharedModelContainer))
+            let createHandler = makeDataHandlerFactory(using: sharedModelContainer)
+            HomeView()
+                .environment(\.createDataHandler, createHandler)
         }
         .modelContainer(sharedModelContainer)
     }

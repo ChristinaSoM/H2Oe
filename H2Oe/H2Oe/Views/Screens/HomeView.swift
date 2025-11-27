@@ -1,5 +1,5 @@
 //
-//  ContentView.swift
+//  HomeView.swift
 //  H2Oe
 //
 //  Created by Christina Moser on 25.11.25.
@@ -9,7 +9,7 @@ import SwiftUI
 import SwiftData
 import DataProvider
 
-struct ContentView: View {
+struct HomeView: View {
     @Environment(\.modelContext) private var modelContext
     @Environment(\.createDataHandler) private var createDataHandler
     @Query(sort: \Item.createTimestamp, animation: .smooth) private var items: [Item]
@@ -46,6 +46,8 @@ struct ContentView: View {
                 Text("Select an item")
             }
             
+            StationDetailView()
+            
             Spacer()
             
             VStack {
@@ -53,7 +55,7 @@ struct ContentView: View {
                 
                 Spacer()
                 
-                // add MapView here
+                // add the station map component here
                 MapView()
             }
         }
@@ -84,6 +86,6 @@ struct ContentView: View {
 }
 
 #Preview {
-    ContentView()
+    HomeView()
         .modelContainer(DataProvider.previewContainer)
 }
