@@ -17,9 +17,7 @@ struct H2OeApp: App {
 
     var body: some Scene {
         WindowGroup {
-            let createHandler = makeDataHandlerFactory(using: sharedModelContainer)
             HomeView()
-                .environment(\.createDataHandler, createHandler)
         }
         .modelContainer(sharedModelContainer)
     }

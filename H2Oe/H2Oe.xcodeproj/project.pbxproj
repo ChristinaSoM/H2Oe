@@ -7,8 +7,8 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
+		1D05D32F2EF591DE00A34904 /* Alamofire in Frameworks */ = {isa = PBXBuildFile; productRef = 1D05D32E2EF591DE00A34904 /* Alamofire */; };
 		1DFA12862ED8D86200B189B6 /* DataProvider in Frameworks */ = {isa = PBXBuildFile; productRef = 1DFA12852ED8D86200B189B6 /* DataProvider */; };
-		1DFA128C2ED8DC1000B189B6 /* Networking in Frameworks */ = {isa = PBXBuildFile; productRef = 1DFA128B2ED8DC1000B189B6 /* Networking */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
@@ -57,8 +57,8 @@
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
-				1DFA128C2ED8DC1000B189B6 /* Networking in Frameworks */,
 				1DFA12862ED8D86200B189B6 /* DataProvider in Frameworks */,
+				1D05D32F2EF591DE00A34904 /* Alamofire in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -128,7 +128,7 @@
 			name = H2Oe;
 			packageProductDependencies = (
 				1DFA12852ED8D86200B189B6 /* DataProvider */,
-				1DFA128B2ED8DC1000B189B6 /* Networking */,
+				1D05D32E2EF591DE00A34904 /* Alamofire */,
 			);
 			productName = H2Oe;
 			productReference = 1D25311F2ED5F32F00913DD5 /* H2Oe.app */;
@@ -214,7 +214,7 @@
 			minimizedProjectReferenceProxies = 1;
 			packageReferences = (
 				1DFA12842ED8D84900B189B6 /* XCLocalSwiftPackageReference "../DataProvider" */,
-				1DFA128A2ED8DBFF00B189B6 /* XCLocalSwiftPackageReference "../Networking" */,
+				1D05D32D2EF591DE00A34904 /* XCRemoteSwiftPackageReference "Alamofire" */,
 			);
 			preferredProjectObjectVersion = 77;
 			productRefGroup = 1D2531202ED5F32F00913DD5 /* Products */;
@@ -605,22 +605,29 @@
 			isa = XCLocalSwiftPackageReference;
 			relativePath = ../DataProvider;
 		};
-		1DFA128A2ED8DBFF00B189B6 /* XCLocalSwiftPackageReference "../Networking" */ = {
-			isa = XCLocalSwiftPackageReference;
-			relativePath = ../Networking;
-		};
 /* End XCLocalSwiftPackageReference section */
 
+/* Begin XCRemoteSwiftPackageReference section */
+		1D05D32D2EF591DE00A34904 /* XCRemoteSwiftPackageReference "Alamofire" */ = {
+			isa = XCRemoteSwiftPackageReference;
+			repositoryURL = "https://github.com/Alamofire/Alamofire.git";
+			requirement = {
+				kind = upToNextMajorVersion;
+				minimumVersion = 5.10.2;
+			};
+		};
+/* End XCRemoteSwiftPackageReference section */
+
 /* Begin XCSwiftPackageProductDependency section */
+		1D05D32E2EF591DE00A34904 /* Alamofire */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = 1D05D32D2EF591DE00A34904 /* XCRemoteSwiftPackageReference "Alamofire" */;
+			productName = Alamofire;
+		};
 		1DFA12852ED8D86200B189B6 /* DataProvider */ = {
 			isa = XCSwiftPackageProductDependency;
 			package = 1DFA12842ED8D84900B189B6 /* XCLocalSwiftPackageReference "../DataProvider" */;
 			productName = DataProvider;
-		};
-		1DFA128B2ED8DC1000B189B6 /* Networking */ = {
-			isa = XCSwiftPackageProductDependency;
-			package = 1DFA128A2ED8DBFF00B189B6 /* XCLocalSwiftPackageReference "../Networking" */;
-			productName = Networking;
 		};
 /* End XCSwiftPackageProductDependency section */
 	};

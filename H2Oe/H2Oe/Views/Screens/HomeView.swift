@@ -11,7 +11,6 @@ import DataProvider
 
 struct HomeView: View {
     @Environment(\.modelContext) private var modelContext // for deleting DataSwift items
-    @Environment(\.createDataHandler) private var createDataHandler
     @Query(sort: \Item.createTimestamp, animation: .smooth) private var items: [Item]  // for automatic fetches and UI updates
 
 
@@ -63,19 +62,15 @@ struct HomeView: View {
 
     @MainActor
     private func addItem() {
-      let createDataHandler = createDataHandler
-      Task.detached {
-        if let dataHandler = await createDataHandler() {
-          try await dataHandler.newItem(date: .now)
-        }
-      }
+        let item = Item(timestamp: .now)
+        modelContext.insert(item)
+        try? modelContext.save()
     }
 
     @MainActor
     private func deleteItems(_ offsets: IndexSet) {
         for index in offsets {
-            let item = items[index]
-            modelContext.delete(item)
+            modelContext.delete(items[index])
         }
         do {
             try modelContext.save()
