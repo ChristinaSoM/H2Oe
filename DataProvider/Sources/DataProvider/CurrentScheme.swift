@@ -4,6 +4,7 @@
 //
 //  Created by Christina Moser on 25.11.25.
 //
+//Reference: https://dev.to/fatbobman/practical-swiftdata-building-swiftui-applications-with-modern-approaches-4b7j
 
 import SwiftData
 

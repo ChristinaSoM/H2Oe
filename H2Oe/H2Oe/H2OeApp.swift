@@ -6,7 +6,7 @@ import SwiftData
 struct H2OeApp: App {
     var sharedModelContainer: ModelContainer = {
         let schema = Schema(CurrentScheme.models)
-        let modelConfiguration = ModelConfiguration(schema: schema, isStoredInMemoryOnly: false)
+        let modelConfiguration = ModelConfiguration(schema: schema, isStoredInMemoryOnly: false) // stored on disk
 
         do {
             return try ModelContainer(for: schema, configurations: [modelConfiguration])

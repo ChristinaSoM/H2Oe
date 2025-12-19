@@ -10,9 +10,9 @@ import SwiftData
 import DataProvider
 
 struct HomeView: View {
-    @Environment(\.modelContext) private var modelContext
+    @Environment(\.modelContext) private var modelContext // for deleting DataSwift items
     @Environment(\.createDataHandler) private var createDataHandler
-    @Query(sort: \Item.createTimestamp, animation: .smooth) private var items: [Item]
+    @Query(sort: \Item.createTimestamp, animation: .smooth) private var items: [Item]  // for automatic fetches and UI updates
 
 
     var body: some View {

@@ -5,13 +5,13 @@
 //  Created by Christina Moser on 25.11.25.
 //
 
-import XCTest
+import Foundation
+import Testing
 import SwiftData
 @testable import DataProvider
 
 
-
-enum ContainerForTest {
+struct SwiftDataContainerForTest  {
   static func temp(_ name: String, delete: Bool = true) throws -> ModelContainer {
     let url = URL.temporaryDirectory.appending(component: name)
     if delete, FileManager.default.fileExists(atPath: url.path) {
@@ -25,14 +25,12 @@ enum ContainerForTest {
 }
 
 
-final class DataProviderTests: XCTestCase {
+@MainActor
+struct DataProviderTests {
     
-    // MARK: - Creation
-    
-    @MainActor
-    func testNewItem() async throws {
+    @Test func testNewItem() async throws {
         // Arrange
-        let container = try ContainerForTest.temp(#function)
+        let container = try SwiftDataContainerForTest.temp(#function)
         let handler = CurrentScheme.DataHandler(modelContainer: container)
         
         // Act
@@ -43,20 +41,17 @@ final class DataProviderTests: XCTestCase {
         let fetchDescriptor = FetchDescriptor<CurrentScheme.Item>()
         let items = try container.mainContext.fetch(fetchDescriptor)
         
-        XCTAssertNotNil(items.first, "The item should be created and fetched successfully.")
-        XCTAssertEqual(items.count, 1, "There should be exactly one item in the store.")
+        try #require(items.first != nil)
+        #expect(items.count == 1)
         
-        if let firstItem = items.first {
-            XCTAssertEqual(firstItem.timestamp, date, "The item's timestamp should match the initially provided date.")
-        } else {
-            XCTFail("Expected to find an item but none was found.")
-        }
+        let firstItem = items.first!
+        #expect(firstItem.timestamp == date)
     }
     
-    @MainActor
+    @Test
     func testCreateTimestampIsSetOnCreation() async throws {
         // Arrange
-        let container = try ContainerForTest.temp(#function)
+        let container = try SwiftDataContainerForTest.temp(#function)
         let handler = CurrentScheme.DataHandler(modelContainer: container)
         
         // Use a reference time to verify createTimestamp is around now
@@ -69,33 +64,23 @@ final class DataProviderTests: XCTestCase {
         let fetchDescriptor = FetchDescriptor<CurrentScheme.Item>()
         let items = try container.mainContext.fetch(fetchDescriptor)
         
-        guard let firstItem = items.first else {
-            XCTFail("Expected to find an item but none was found.")
-            return
-        }
+        try #require(items.first != nil)
+        let firstItem = items.first!
         
         let createTimestamp = firstItem.createTimestamp
         let afterFetch = Date()
         
         // Check that createTimestamp is between beforeCreation and afterFetch
-        XCTAssertGreaterThanOrEqual(
-            createTimestamp,
-            beforeCreation,
-            "createTimestamp should not be earlier than the time before creation."
-        )
-        XCTAssertLessThanOrEqual(
-            createTimestamp,
-            afterFetch,
-            "createTimestamp should not be later than the time after fetching."
-        )
+        #expect(createTimestamp >= beforeCreation)
+        #expect(createTimestamp <= afterFetch)
     }
     
     // MARK: - Update
     
-    @MainActor
+    @Test
     func testUpdateItemChangesTimestamp() async throws {
         // Arrange
-        let container = try ContainerForTest.temp(#function)
+        let container = try SwiftDataContainerForTest.temp(#function)
         let handler = CurrentScheme.DataHandler(modelContainer: container)
         
         let originalDate = Date(timeIntervalSince1970: 0)
@@ -111,20 +96,18 @@ final class DataProviderTests: XCTestCase {
         let fetchDescriptor = FetchDescriptor<CurrentScheme.Item>()
         let items = try container.mainContext.fetch(fetchDescriptor)
         
-        XCTAssertEqual(items.count, 1, "There should still be exactly one item in the store.")
-        guard let firstItem = items.first else {
-            XCTFail("Expected to find an item after update but none was found.")
-            return
-        }
+        #expect(items.count == 1)
+        try #require(items.first != nil)
+        let firstItem = items.first!
         
-        XCTAssertEqual(firstItem.timestamp, updatedDate, "The item's timestamp should be updated to the new value.")
-        XCTAssertNotEqual(firstItem.timestamp, originalDate, "The timestamp should no longer be the original one.")
+        #expect(firstItem.timestamp == updatedDate)
+        #expect(firstItem.timestamp != originalDate)
     }
     
-    @MainActor
+    @Test
     func testCreateTimestampUnchangedAfterUpdate() async throws {
         // Arrange
-        let container = try ContainerForTest.temp(#function)
+        let container = try SwiftDataContainerForTest.temp(#function)
         let handler = CurrentScheme.DataHandler(modelContainer: container)
         
         let originalDate = Date(timeIntervalSince1970: 0)
@@ -136,10 +119,8 @@ final class DataProviderTests: XCTestCase {
         // Fetch and remember createTimestamp
         var fetchDescriptor = FetchDescriptor<CurrentScheme.Item>()
         var items = try container.mainContext.fetch(fetchDescriptor)
-        guard let firstItemBeforeUpdate = items.first else {
-            XCTFail("Expected to find an item before update but none was found.")
-            return
-        }
+        try #require(items.first != nil)
+        let firstItemBeforeUpdate = items.first!
         let originalCreateTimestamp = firstItemBeforeUpdate.createTimestamp
         
         // Act – update the timestamp
@@ -148,28 +129,17 @@ final class DataProviderTests: XCTestCase {
         // Assert – createTimestamp should be unchanged
         fetchDescriptor = FetchDescriptor<CurrentScheme.Item>()
         items = try container.mainContext.fetch(fetchDescriptor)
+        try #require(items.first != nil)
+        let firstItemAfterUpdate = items.first!
         
-        guard let firstItemAfterUpdate = items.first else {
-            XCTFail("Expected to find an item after update but none was found.")
-            return
-        }
-        
-        XCTAssertEqual(
-            firstItemAfterUpdate.createTimestamp,
-            originalCreateTimestamp,
-            "createTimestamp should remain unchanged after updating the item."
-        )
-        XCTAssertEqual(
-            firstItemAfterUpdate.timestamp,
-            updatedDate,
-            "The timestamp should be updated to the new value."
-        )
+        #expect(firstItemAfterUpdate.createTimestamp == originalCreateTimestamp)
+        #expect(firstItemAfterUpdate.timestamp == updatedDate)
     }
     
-    @MainActor
+    @Test
     func testUpdateItemOnDeletedItemDoesNothing() async throws {
         // Arrange
-        let container = try ContainerForTest.temp(#function)
+        let container = try SwiftDataContainerForTest.temp(#function)
         let handler = CurrentScheme.DataHandler(modelContainer: container)
         
         let originalDate = Date(timeIntervalSince1970: 0)
@@ -186,15 +156,15 @@ final class DataProviderTests: XCTestCase {
         let fetchDescriptor = FetchDescriptor<CurrentScheme.Item>()
         let items = try container.mainContext.fetch(fetchDescriptor)
         
-        XCTAssertEqual(items.count, 0, "No item should exist after deleting and trying to update the same id.")
+        #expect(items.count == 0)
     }
     
     // MARK: - Delete
     
-    @MainActor
+    @Test
     func testDeleteItemRemovesItem() async throws {
         // Arrange
-        let container = try ContainerForTest.temp(#function)
+        let container = try SwiftDataContainerForTest.temp(#function)
         let handler = CurrentScheme.DataHandler(modelContainer: container)
         
         let date = Date(timeIntervalSince1970: 0)
@@ -203,7 +173,7 @@ final class DataProviderTests: XCTestCase {
         // Sanity check before delete
         var fetchDescriptor = FetchDescriptor<CurrentScheme.Item>()
         var items = try container.mainContext.fetch(fetchDescriptor)
-        XCTAssertEqual(items.count, 1, "There should be one item before deletion.")
+        #expect(items.count == 1)
         
         // Act
         try await handler.deleteItem(id: id)
@@ -212,13 +182,13 @@ final class DataProviderTests: XCTestCase {
         fetchDescriptor = FetchDescriptor<CurrentScheme.Item>()
         items = try container.mainContext.fetch(fetchDescriptor)
         
-        XCTAssertEqual(items.count, 0, "The item should be removed from the store after deletion.")
+        #expect(items.count == 0)
     }
     
-    @MainActor
+    @Test
     func testDeleteItemOnAlreadyDeletedIdDoesNotCrash() async throws {
         // Arrange
-        let container = try ContainerForTest.temp(#function)
+        let container = try SwiftDataContainerForTest.temp(#function)
         let handler = CurrentScheme.DataHandler(modelContainer: container)
         
         let date = Date(timeIntervalSince1970: 0)
@@ -234,15 +204,15 @@ final class DataProviderTests: XCTestCase {
         let fetchDescriptor = FetchDescriptor<CurrentScheme.Item>()
         let items = try container.mainContext.fetch(fetchDescriptor)
         
-        XCTAssertEqual(items.count, 0, "Deleting the same id twice should not recreate an item.")
+        #expect(items.count == 0)
     }
     
     // MARK: - Multiple Items
     
-    @MainActor
+    @Test
     func testUpdatingOneItemDoesNotAffectOthers() async throws {
         // Arrange
-        let container = try ContainerForTest.temp(#function)
+        let container = try SwiftDataContainerForTest.temp(#function)
         let handler = CurrentScheme.DataHandler(modelContainer: container)
         
         let date1 = Date(timeIntervalSince1970: 0)
@@ -259,29 +229,26 @@ final class DataProviderTests: XCTestCase {
         let fetchDescriptor = FetchDescriptor<CurrentScheme.Item>()
         let items = try container.mainContext.fetch(fetchDescriptor)
         
-        XCTAssertEqual(items.count, 2, "There should be exactly two items in the store.")
+        #expect(items.count == 2)
         
         // Sort items for deterministic order
         let sortedItems = items.sorted { $0.timestamp < $1.timestamp }
         
         // Find items by id
-        guard let item1 = sortedItems.first(where: { $0.persistentModelID == id1 }) else {
-            XCTFail("Expected to find item 1.")
-            return
-        }
-        guard let item2 = sortedItems.first(where: { $0.persistentModelID == id2 }) else {
-            XCTFail("Expected to find item 2.")
-            return
-        }
+        try #require(sortedItems.first(where: { $0.persistentModelID == id1 }) != nil)
+        try #require(sortedItems.first(where: { $0.persistentModelID == id2 }) != nil)
         
-        XCTAssertEqual(item1.timestamp, updatedDate1, "Item 1 should have the updated timestamp.")
-        XCTAssertEqual(item2.timestamp, date2, "Item 2 should keep its original timestamp.")
+        let item1 = sortedItems.first(where: { $0.persistentModelID == id1 })!
+        let item2 = sortedItems.first(where: { $0.persistentModelID == id2 })!
+        
+        #expect(item1.timestamp == updatedDate1)
+        #expect(item2.timestamp == date2)
     }
     
-    @MainActor
+    @Test
     func testDeletingOneItemDoesNotDeleteOthers() async throws {
         // Arrange
-        let container = try ContainerForTest.temp(#function)
+        let container = try SwiftDataContainerForTest.temp(#function)
         let handler = CurrentScheme.DataHandler(modelContainer: container)
         
         let date1 = Date(timeIntervalSince1970: 0)
@@ -297,14 +264,12 @@ final class DataProviderTests: XCTestCase {
         let fetchDescriptor = FetchDescriptor<CurrentScheme.Item>()
         let items = try container.mainContext.fetch(fetchDescriptor)
         
-        XCTAssertEqual(items.count, 1, "There should be exactly one item left after deleting one.")
+        #expect(items.count == 1)
         
-        guard let remainingItem = items.first else {
-            XCTFail("Expected to find the remaining item but none was found.")
-            return
-        }
+        try #require(items.first != nil)
+        let remainingItem = items.first!
         
-        XCTAssertEqual(remainingItem.persistentModelID, id2, "The remaining item should be the second one.")
-        XCTAssertEqual(remainingItem.timestamp, date2, "The remaining item should keep its original timestamp.")
+        #expect(remainingItem.persistentModelID == id2)
+        #expect(remainingItem.timestamp == date2)
     }
 }
