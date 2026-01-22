@@ -44,6 +44,22 @@
 			);
 			target = 1D25311E2ED5F32F00913DD5 /* H2Oe */;
 		};
+		1D5E6F0A2F2298A000422916 /* Exceptions for "H2OeUITests" folder in "H2OeTests" target */ = {
+			isa = PBXFileSystemSynchronizedBuildFileExceptionSet;
+			membershipExceptions = (
+				H2OeUITests.swift,
+				H2OeUITestsLaunchTests.swift,
+			);
+			target = 1D25312D2ED5F33000913DD5 /* H2OeTests */;
+		};
+		1D5E6F0B2F2298A000422916 /* Exceptions for "H2OeUITests" folder in "H2OeUITests" target */ = {
+			isa = PBXFileSystemSynchronizedBuildFileExceptionSet;
+			membershipExceptions = (
+				H2OeUITests.swift,
+				H2OeUITestsLaunchTests.swift,
+			);
+			target = 1D2531372ED5F33000913DD5 /* H2OeUITests */;
+		};
 /* End PBXFileSystemSynchronizedBuildFileExceptionSet section */
 
 /* Begin PBXFileSystemSynchronizedRootGroup section */
@@ -60,8 +76,12 @@
 			path = H2OeTests;
 			sourceTree = "<group>";
 		};
-		1D25313B2ED5F33000913DD5 /* H2OeUITests */ = {
+		1D5E6F072F2298A000422916 /* H2OeUITests */ = {
 			isa = PBXFileSystemSynchronizedRootGroup;
+			exceptions = (
+				1D5E6F0A2F2298A000422916 /* Exceptions for "H2OeUITests" folder in "H2OeTests" target */,
+				1D5E6F0B2F2298A000422916 /* Exceptions for "H2OeUITests" folder in "H2OeUITests" target */,
+			);
 			path = H2OeUITests;
 			sourceTree = "<group>";
 		};
@@ -98,8 +118,8 @@
 			isa = PBXGroup;
 			children = (
 				1D2531212ED5F32F00913DD5 /* H2Oe */,
+				1D5E6F072F2298A000422916 /* H2OeUITests */,
 				1D2531312ED5F33000913DD5 /* H2OeTests */,
-				1D25313B2ED5F33000913DD5 /* H2OeUITests */,
 				1DFA12582ED8D2A200B189B6 /* Frameworks */,
 				1D2531202ED5F32F00913DD5 /* Products */,
 				1D05D3632F14008400A34904 /* Secrets.xcconfig */,
@@ -165,6 +185,7 @@
 			);
 			fileSystemSynchronizedGroups = (
 				1D2531312ED5F33000913DD5 /* H2OeTests */,
+				1D5E6F072F2298A000422916 /* H2OeUITests */,
 			);
 			name = H2OeTests;
 			packageProductDependencies = (
@@ -185,9 +206,6 @@
 			);
 			dependencies = (
 				1D25313A2ED5F33000913DD5 /* PBXTargetDependency */,
-			);
-			fileSystemSynchronizedGroups = (
-				1D25313B2ED5F33000913DD5 /* H2OeUITests */,
 			);
 			name = H2OeUITests;
 			packageProductDependencies = (
