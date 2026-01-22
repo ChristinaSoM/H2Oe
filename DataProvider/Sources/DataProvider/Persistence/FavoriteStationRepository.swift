@@ -27,6 +27,14 @@ public struct FavoriteStationRepository {
 
         //gets station-info
         if let station = try context.fetch(descriptor).first {
+            
+            //delete 
+            if isFavorite == false {
+                            context.delete(station)
+                            try context.save()
+                            return
+                        }
+            
             // overwrite metadata
             station.name = name
             station.unit = unit

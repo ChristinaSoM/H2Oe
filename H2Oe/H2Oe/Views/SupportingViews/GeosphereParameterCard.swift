@@ -42,6 +42,7 @@ struct GeosphereParameterCard: View {
                             .foregroundStyle(.secondary)
                     }
                 }
+                .padding(.bottom, 8)
             }
 
             if points.isEmpty {

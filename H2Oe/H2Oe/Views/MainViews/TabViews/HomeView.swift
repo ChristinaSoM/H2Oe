@@ -32,7 +32,8 @@ struct HomeView: View {
                     .font(.footnote)
                     .foregroundStyle(.secondary)
                     .padding(.horizontal)
-                    .padding(.top, 2)
+                    .padding(.top, 6)
+                    .padding(.bottom, 4)
                 
                 statusView
                     .frame(maxWidth: .infinity, alignment: .center)
