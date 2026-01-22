@@ -8,6 +8,7 @@
 
 /* Begin PBXBuildFile section */
 		1D05D32F2EF591DE00A34904 /* Alamofire in Frameworks */ = {isa = PBXBuildFile; productRef = 1D05D32E2EF591DE00A34904 /* Alamofire */; };
+		1D05D3642F14008400A34904 /* Secrets.xcconfig in Resources */ = {isa = PBXBuildFile; fileRef = 1D05D3632F14008400A34904 /* Secrets.xcconfig */; };
 		1DFA12862ED8D86200B189B6 /* DataProvider in Frameworks */ = {isa = PBXBuildFile; productRef = 1DFA12852ED8D86200B189B6 /* DataProvider */; };
 /* End PBXBuildFile section */
 
@@ -29,14 +30,28 @@
 /* End PBXContainerItemProxy section */
 
 /* Begin PBXFileReference section */
+		1D05D3632F14008400A34904 /* Secrets.xcconfig */ = {isa = PBXFileReference; lastKnownFileType = text.xcconfig; path = Secrets.xcconfig; sourceTree = "<group>"; };
 		1D25311F2ED5F32F00913DD5 /* H2Oe.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = H2Oe.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		1D25312E2ED5F33000913DD5 /* H2OeTests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = H2OeTests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
 		1D2531382ED5F33000913DD5 /* H2OeUITests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = H2OeUITests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
 /* End PBXFileReference section */
 
+/* Begin PBXFileSystemSynchronizedBuildFileExceptionSet section */
+		1D05D3662F14039D00A34904 /* Exceptions for "H2Oe" folder in "H2Oe" target */ = {
+			isa = PBXFileSystemSynchronizedBuildFileExceptionSet;
+			membershipExceptions = (
+				Info.plist,
+			);
+			target = 1D25311E2ED5F32F00913DD5 /* H2Oe */;
+		};
+/* End PBXFileSystemSynchronizedBuildFileExceptionSet section */
+
 /* Begin PBXFileSystemSynchronizedRootGroup section */
 		1D2531212ED5F32F00913DD5 /* H2Oe */ = {
 			isa = PBXFileSystemSynchronizedRootGroup;
+			exceptions = (
+				1D05D3662F14039D00A34904 /* Exceptions for "H2Oe" folder in "H2Oe" target */,
+			);
 			path = H2Oe;
 			sourceTree = "<group>";
 		};
@@ -87,6 +102,7 @@
 				1D25313B2ED5F33000913DD5 /* H2OeUITests */,
 				1DFA12582ED8D2A200B189B6 /* Frameworks */,
 				1D2531202ED5F32F00913DD5 /* Products */,
+				1D05D3632F14008400A34904 /* Secrets.xcconfig */,
 			);
 			sourceTree = "<group>";
 		};
@@ -233,6 +249,7 @@
 			isa = PBXResourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				1D05D3642F14008400A34904 /* Secrets.xcconfig in Resources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -292,6 +309,7 @@
 /* Begin XCBuildConfiguration section */
 		1D2531402ED5F33000913DD5 /* Debug */ = {
 			isa = XCBuildConfiguration;
+			baseConfigurationReference = 1D05D3632F14008400A34904 /* Secrets.xcconfig */;
 			buildSettings = {
 				ALWAYS_SEARCH_USER_PATHS = NO;
 				ASSETCATALOG_COMPILER_GENERATE_SWIFT_ASSET_SYMBOL_EXTENSIONS = YES;
@@ -356,6 +374,7 @@
 		};
 		1D2531412ED5F33000913DD5 /* Release */ = {
 			isa = XCBuildConfiguration;
+			baseConfigurationReference = 1D05D3632F14008400A34904 /* Secrets.xcconfig */;
 			buildSettings = {
 				ALWAYS_SEARCH_USER_PATHS = NO;
 				ASSETCATALOG_COMPILER_GENERATE_SWIFT_ASSET_SYMBOL_EXTENSIONS = YES;
@@ -421,6 +440,7 @@
 				DEVELOPMENT_TEAM = ZJRA382XX6;
 				ENABLE_PREVIEWS = YES;
 				GENERATE_INFOPLIST_FILE = YES;
+				INFOPLIST_FILE = H2Oe/Info.plist;
 				INFOPLIST_KEY_UIApplicationSceneManifest_Generation = YES;
 				INFOPLIST_KEY_UIApplicationSupportsIndirectInputEvents = YES;
 				INFOPLIST_KEY_UILaunchScreen_Generation = YES;
@@ -453,6 +473,7 @@
 				DEVELOPMENT_TEAM = ZJRA382XX6;
 				ENABLE_PREVIEWS = YES;
 				GENERATE_INFOPLIST_FILE = YES;
+				INFOPLIST_FILE = H2Oe/Info.plist;
 				INFOPLIST_KEY_UIApplicationSceneManifest_Generation = YES;
 				INFOPLIST_KEY_UIApplicationSupportsIndirectInputEvents = YES;
 				INFOPLIST_KEY_UILaunchScreen_Generation = YES;

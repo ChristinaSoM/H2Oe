@@ -8,14 +8,25 @@
 
 import SwiftData
 
-public typealias CurrentScheme = SchemaV1
+public typealias CurrentScheme = SchemaV2
 
 public enum SchemaV1: VersionedSchema {
-  public static var versionIdentifier: Schema.Version {
-    .init(1, 0, 0)
-  }
+    public static var versionIdentifier: Schema.Version {
+        .init(1, 0, 0)
+    }
+    
+    public static var models: [any PersistentModel.Type] {
+        [FavoriteStation.self]
+    }
+}
 
-  public static var models: [any PersistentModel.Type] {
-    [Item.self]
-  }
+
+public enum SchemaV2: VersionedSchema {
+    public static var versionIdentifier: Schema.Version {
+        .init(2, 0, 0)
+    }
+    
+    public static var models: [any PersistentModel.Type] {
+        [FavoriteStation.self]
+    }
 }
