@@ -81,7 +81,11 @@ struct ContentView: View {
                         stations = data.features
                         Task { @MainActor in  //extra task for not blocking the UI
                             await updateFavoritesFromStations(stations)
-                            await forecastStore.loadBatch(hzbnrs: stations.map(\.hzbnr))
+                            // Only forecast the favourites at open: a full ~67-station
+                            // batch overwhelms the server's per-station live GeoSphere
+                            // fetch (GeoSphere rate-limits it -> 429 storm). Non-favourite
+                            // stations load their forecast on demand when their detail opens.
+                            await forecastStore.loadBatch(hzbnrs: favorites.map(\.hzbnr))
                             await persistFavoriteForecasts()
                         }
                     case .failure(let error):
