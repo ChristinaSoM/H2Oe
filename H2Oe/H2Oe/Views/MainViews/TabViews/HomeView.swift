@@ -14,6 +14,7 @@ struct HomeView: View {
     let errorText: String?
     
     @Query private var favorites: [SchemaV1.FavoriteStation]
+    @Environment(ForecastStore.self) private var forecastStore: ForecastStore?
     
     @State private var selectedStation: StationDetails?
     @State private var pushStation: StationDetails?
@@ -21,6 +22,16 @@ struct HomeView: View {
     
     private var favoriteHzbnrs: Set<Int> {
         Set(favorites.map(\.hzbnr))
+    }
+
+    private var warningByHzbnr: [Int: FloodWarning] {
+        guard let forecastStore else { return [:] }
+        var result: [Int: FloodWarning] = [:]
+        for station in stations {
+            let warning = FloodWarning(forecast: forecastStore.forecast(for: station.hzbnr))
+            if warning.isWarning { result[station.hzbnr] = warning }
+        }
+        return result
     }
     
     var body: some View {
@@ -118,7 +129,8 @@ struct HomeView: View {
             MapView(
                 stations: stations,
                 onSelectStation: { selectedStation = $0 },
-                favoriteHzbnrs: favoriteHzbnrs
+                favoriteHzbnrs: favoriteHzbnrs,
+                warningByHzbnr: warningByHzbnr
             )
             .id(mapRebuildToken)
             .clipShape(RoundedRectangle(cornerRadius: 12, style: .continuous))

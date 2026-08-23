@@ -21,6 +21,7 @@ struct MapView: View {
     let stations: [StationDetails]
     let onSelectStation: (StationDetails) -> Void
     let favoriteHzbnrs: Set<Int>
+    let warningByHzbnr: [Int: FloodWarning]
     
     
     var body: some View {
@@ -28,10 +29,17 @@ struct MapView: View {
             ForEach(stations) { station in
                 let coordinate = CLLocationCoordinate2D(latitude: station.lat, longitude: station.lon)
                 let isFav = favoriteHzbnrs.contains(station.hzbnr)
-                
-                Marker(station.name, coordinate: coordinate)
-                    .tint(isFav ? .blue : .cyan)
-                    .tag(station.id)
+                let warning = warningByHzbnr[station.hzbnr] ?? .none
+
+                if warning.isWarning {
+                    Marker(station.name, systemImage: warning.symbolName, coordinate: coordinate)
+                        .tint(warning.tint)
+                        .tag(station.id)
+                } else {
+                    Marker(station.name, coordinate: coordinate)
+                        .tint(isFav ? .blue : .cyan)
+                        .tag(station.id)
+                }
                 
                 //                Annotation(station.name, coordinate: coordinate, anchor: .top) {
                 //                    HStack(spacing: 8) {

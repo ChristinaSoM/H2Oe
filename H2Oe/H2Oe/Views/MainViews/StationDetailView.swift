@@ -220,6 +220,10 @@ struct StationDetailView: View {
         .padding(.top, 8)
     }
 
+    private var warning: FloodWarning {
+        FloodWarning(forecast: forecastStore?.forecast(for: station.hzbnr))
+    }
+
     @ViewBuilder
     private var forecastSection: some View {
         VStack(alignment: .leading, spacing: 10) {
@@ -228,6 +232,7 @@ struct StationDetailView: View {
                     .font(.title2)
                     .bold()
                 Spacer()
+                FloodWarningBadge(warning: warning)
             }
             .padding(.horizontal)
             .padding(.top, 12)

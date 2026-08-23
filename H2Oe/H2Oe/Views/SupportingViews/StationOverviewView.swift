@@ -13,6 +13,7 @@ struct StationOverviewView: View {
     
     let station: StationDetails
     let onMoreDetails: (StationDetails) -> Void  //callback function (back to homeview and pushStation navigation and close sheet) if user wants more information
+    @Environment(ForecastStore.self) private var forecastStore: ForecastStore?
     
     @State private var position: MapCameraPosition
     
@@ -52,6 +53,7 @@ struct StationOverviewView: View {
                             lastTimeOfMeasurement: station.timeOfMeasurement
                         )
                     }
+                    FloodWarningBadge(warning: FloodWarning(forecast: forecastStore?.forecast(for: station.hzbnr)))
                 }
                 VStack(alignment: .leading) {
                     Text("HZBNR \(String(station.hzbnr))")

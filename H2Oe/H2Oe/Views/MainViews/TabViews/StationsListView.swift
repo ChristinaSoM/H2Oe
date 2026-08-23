@@ -12,6 +12,7 @@ import DataProvider
 struct StationsListView: View {
     
     let stations: [StationDetails]
+    @Environment(ForecastStore.self) private var forecastStore: ForecastStore?
     @State private var searchString = ""
     
     private var sortedStations: [StationDetails] {
@@ -107,6 +108,8 @@ struct StationsListView: View {
                     .font(.headline)
                     .foregroundStyle(.primary)
                     .lineLimit(1)
+                
+                FloodWarningBadge(warning: FloodWarning(forecast: forecastStore?.forecast(for: station.hzbnr)))
                 
                 VStack(spacing: 10) {
                     HStack {
