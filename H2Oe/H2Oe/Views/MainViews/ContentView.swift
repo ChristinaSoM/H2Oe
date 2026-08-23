@@ -27,6 +27,8 @@ struct ContentView: View {
     @State private var isLoading = false
     @State private var selectedTab: Tabs = .home
     @State private var forecastStore = ForecastStore()
+    @AppStorage("aiDisclosureAcknowledged") private var aiAcknowledged = false
+    @State private var showAIDisclosure = false
     
 
     var body: some View {
@@ -49,6 +51,13 @@ struct ContentView: View {
         }
         .task { //executes if view appears
             await loadingData()
+        }
+        .onAppear { if !aiAcknowledged { showAIDisclosure = true } }
+        .sheet(isPresented: $showAIDisclosure) {
+            AIDisclosureView {
+                aiAcknowledged = true
+                showAIDisclosure = false
+            }
         }
         .toolbarBackground(.ultraThinMaterial, for: .tabBar)
         .toolbarBackground(.visible, for: .tabBar)

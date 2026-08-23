@@ -275,6 +275,8 @@ struct StationDetailView: View {
                         Divider()
                     }
                 }
+                AIGeneratedNote()
+                    .padding(.horizontal)
 
             } else if let store = forecastStore,
                       let forecast = store.forecast(for: station.hzbnr), !forecast.ok {
