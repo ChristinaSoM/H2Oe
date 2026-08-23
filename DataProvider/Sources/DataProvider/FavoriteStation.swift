@@ -20,6 +20,8 @@ extension SchemaV1 {
         public var value: [Double]
         public var isFavorite: Bool
         public var lastTimeOfMeasurement: Date
+        // Last-known forecast for this favourite (nil until first fetched).
+        public var forecast: StoredForecast?
 
         public init(
             name: String,

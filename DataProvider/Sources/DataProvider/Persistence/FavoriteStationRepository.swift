@@ -60,4 +60,15 @@ public struct FavoriteStationRepository {
 
         try context.save() //now it writes!!!!
     }
+
+    /// Persist the last-known forecast for an existing favourite. No-op when the
+    /// station is not (or no longer) a favourite.
+    public func updateFavoriteForecast(hzbnr: Int, forecast: StoredForecast) throws {
+        let descriptor = FetchDescriptor<FavoriteStation>(
+            predicate: #Predicate { $0.hzbnr == hzbnr }
+        )
+        guard let station = try context.fetch(descriptor).first else { return }
+        station.forecast = forecast
+        try context.save()
+    }
 }
