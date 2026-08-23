@@ -271,7 +271,7 @@ struct StationDetailView: View {
                                  : "Flood warning: \(exceeded.joined(separator: ", "))")
                                 .font(.caption)
                                 .bold(!exceeded.isEmpty)
-                                .foregroundStyle(exceeded.isEmpty ? .secondary : .orange)
+                                .foregroundStyle(exceeded.isEmpty ? Color.secondary : Color.orange)
                         }
                         Divider()
                     }
