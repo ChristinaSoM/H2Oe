@@ -40,8 +40,8 @@ struct StationDetailView: View {
                 .padding(.horizontal)
                 
                 qHeader
-                forecastSection
                 stationInfoCard
+                forecastSection
                 geosphereSection
             }
             .padding(.top, 18)

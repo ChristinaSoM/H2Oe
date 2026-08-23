@@ -19,6 +19,8 @@ private let prognoseBaseURL = "https://h2oe-prognose.duckdns.org"
 nonisolated enum ForecastError: LocalizedError, Sendable {
     case rateLimited
     case serviceUnavailable(Int)
+    case timedOut
+    case offline
     case transport(String)
     case decoding(String)
 
@@ -28,6 +30,10 @@ nonisolated enum ForecastError: LocalizedError, Sendable {
             return "Too many requests — please wait a moment and try again."
         case .serviceUnavailable(let code):
             return "Forecast service unavailable (HTTP \(code)). Please try again later."
+        case .timedOut:
+            return "The forecast service took too long to respond. Please check your connection and try again."
+        case .offline:
+            return "No internet connection. Connect to a network to load the forecast."
         case .transport(let message):
             return "Could not reach the forecast service: \(message)"
         case .decoding(let message):
@@ -56,6 +62,17 @@ private func mapForecastError(_ error: AFError, statusCode: Int?) -> ForecastErr
     if statusCode == 429 { return .rateLimited }
     if let code = statusCode, code >= 500 { return .serviceUnavailable(code) }
     if case .responseSerializationFailed = error { return .decoding(error.localizedDescription) }
+    if let urlError = error.underlyingError as? URLError {
+        switch urlError.code {
+        case .timedOut:
+            return .timedOut
+        case .notConnectedToInternet, .networkConnectionLost, .cannotConnectToHost,
+             .cannotFindHost, .dnsLookupFailed, .dataNotAllowed:
+            return .offline
+        default:
+            break
+        }
+    }
     return .transport(error.localizedDescription)
 }
 
