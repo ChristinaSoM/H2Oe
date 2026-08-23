@@ -27,249 +27,265 @@ struct SwiftDataContainerForTest  {
 
 @MainActor
 struct DataProviderTests {
-    
-    @Test func testNewItem() async throws {
-        // Arrange
-        let container = try SwiftDataContainerForTest.temp(#function)
-        let handler = CurrentScheme.DataHandler(modelContainer: container)
-        
-        // Act
-        let date = Date(timeIntervalSince1970: 0)
-        try await handler.newItem(date: date)
-        
-        // Assert
-        let fetchDescriptor = FetchDescriptor<CurrentScheme.Item>()
-        let items = try container.mainContext.fetch(fetchDescriptor)
-        
-        try #require(items.first != nil)
-        #expect(items.count == 1)
-        
-        let firstItem = items.first!
-        #expect(firstItem.timestamp == date)
-    }
-    
+
+    // MARK: - Insert
+
+    /// Contract 1: an unknown hzbnr inserts exactly one row carrying the supplied
+    /// fields, seeds `value` with `[newValue]`, and defaults `isFavorite` to true
+    /// when the argument is nil.
     @Test
-    func testCreateTimestampIsSetOnCreation() async throws {
-        // Arrange
+    func insertsNewStationWhenHzbnrMissing() throws {
         let container = try SwiftDataContainerForTest.temp(#function)
-        let handler = CurrentScheme.DataHandler(modelContainer: container)
-        
-        // Use a reference time to verify createTimestamp is around now
-        let beforeCreation = Date()
-        
-        // Act
-        try await handler.newItem(date: Date(timeIntervalSince1970: 0))
-        
-        // Assert
-        let fetchDescriptor = FetchDescriptor<CurrentScheme.Item>()
-        let items = try container.mainContext.fetch(fetchDescriptor)
-        
-        try #require(items.first != nil)
-        let firstItem = items.first!
-        
-        let createTimestamp = firstItem.createTimestamp
-        let afterFetch = Date()
-        
-        // Check that createTimestamp is between beforeCreation and afterFetch
-        #expect(createTimestamp >= beforeCreation)
-        #expect(createTimestamp <= afterFetch)
+        let repo = FavoriteStationRepository(context: container.mainContext)
+
+        let measured = Date(timeIntervalSince1970: 1_000)
+        try repo.updateFavoriteStation(
+            name: "Wien",
+            hzbnr: 42,
+            unit: "m³/s",
+            newValue: 12.5,
+            lastTimeOfMeasurement: measured
+        )
+
+        let rows = try container.mainContext.fetch(FetchDescriptor<FavoriteStation>())
+        #expect(rows.count == 1)
+
+        let station = try #require(rows.first)
+        #expect(station.hzbnr == 42)
+        #expect(station.name == "Wien")
+        #expect(station.unit == "m³/s")
+        #expect(station.value == [12.5])
+        #expect(station.lastTimeOfMeasurement == measured)
+        #expect(station.isFavorite == true)
     }
-    
+
+    /// Contract 5 (edge): an ABSENT hzbnr called with `isFavorite: false` must still
+    /// INSERT a single row — the delete branch only fires when a row already exists —
+    /// and that inserted row must be non-favorite.
+    @Test
+    func insertsNonFavoriteRowWhenAbsentAndIsFavoriteFalse() throws {
+        let container = try SwiftDataContainerForTest.temp(#function)
+        let repo = FavoriteStationRepository(context: container.mainContext)
+
+        try repo.updateFavoriteStation(
+            name: "Graz",
+            hzbnr: 7,
+            unit: "cm",
+            newValue: 3.0,
+            lastTimeOfMeasurement: Date(timeIntervalSince1970: 500),
+            isFavorite: false
+        )
+
+        let rows = try container.mainContext.fetch(FetchDescriptor<FavoriteStation>())
+        #expect(rows.count == 1)
+
+        let station = try #require(rows.first)
+        #expect(station.hzbnr == 7)
+        #expect(station.isFavorite == false)
+        #expect(station.value == [3.0])
+    }
+
     // MARK: - Update
-    
+
+    /// Contract 2: a second call for the same hzbnr with a newer measurement updates
+    /// in place (no duplicate row), overwrites name/unit, APPENDS the new value, and
+    /// advances the timestamp.
     @Test
-    func testUpdateItemChangesTimestamp() async throws {
-        // Arrange
+    func updatesInPlaceAndAppendsWhenMeasurementNewer() throws {
         let container = try SwiftDataContainerForTest.temp(#function)
-        let handler = CurrentScheme.DataHandler(modelContainer: container)
-        
-        let originalDate = Date(timeIntervalSince1970: 0)
-        let updatedDate = Date(timeIntervalSince1970: 100)
-        
-        // Create initial item
-        let id = try await handler.newItem(date: originalDate)
-        
-        // Act
-        try await handler.updateItem(id: id, timestamp: updatedDate)
-        
-        // Assert
-        let fetchDescriptor = FetchDescriptor<CurrentScheme.Item>()
-        let items = try container.mainContext.fetch(fetchDescriptor)
-        
-        #expect(items.count == 1)
-        try #require(items.first != nil)
-        let firstItem = items.first!
-        
-        #expect(firstItem.timestamp == updatedDate)
-        #expect(firstItem.timestamp != originalDate)
+        let repo = FavoriteStationRepository(context: container.mainContext)
+
+        let t1 = Date(timeIntervalSince1970: 1_000)
+        let t2 = Date(timeIntervalSince1970: 2_000)
+
+        try repo.updateFavoriteStation(
+            name: "Wien",
+            hzbnr: 42,
+            unit: "m³/s",
+            newValue: 10.0,
+            lastTimeOfMeasurement: t1
+        )
+        try repo.updateFavoriteStation(
+            name: "Wien-Nord",
+            hzbnr: 42,
+            unit: "cm",
+            newValue: 11.0,
+            lastTimeOfMeasurement: t2
+        )
+
+        let rows = try container.mainContext.fetch(FetchDescriptor<FavoriteStation>())
+        #expect(rows.count == 1)
+
+        let station = try #require(rows.first)
+        #expect(station.name == "Wien-Nord")
+        #expect(station.unit == "cm")
+        #expect(station.value == [10.0, 11.0])
+        #expect(station.lastTimeOfMeasurement == t2)
     }
-    
+
+    /// Contract 2 boundary: an EQUAL timestamp still counts as newer-or-equal, so the
+    /// value is appended. Pins the `>=` gate against a `>` regression.
     @Test
-    func testCreateTimestampUnchangedAfterUpdate() async throws {
-        // Arrange
+    func appendsWhenMeasurementTimestampEqual() throws {
         let container = try SwiftDataContainerForTest.temp(#function)
-        let handler = CurrentScheme.DataHandler(modelContainer: container)
-        
-        let originalDate = Date(timeIntervalSince1970: 0)
-        let updatedDate = Date(timeIntervalSince1970: 200)
-        
-        // Create item
-        let id = try await handler.newItem(date: originalDate)
-        
-        // Fetch and remember createTimestamp
-        var fetchDescriptor = FetchDescriptor<CurrentScheme.Item>()
-        var items = try container.mainContext.fetch(fetchDescriptor)
-        try #require(items.first != nil)
-        let firstItemBeforeUpdate = items.first!
-        let originalCreateTimestamp = firstItemBeforeUpdate.createTimestamp
-        
-        // Act – update the timestamp
-        try await handler.updateItem(id: id, timestamp: updatedDate)
-        
-        // Assert – createTimestamp should be unchanged
-        fetchDescriptor = FetchDescriptor<CurrentScheme.Item>()
-        items = try container.mainContext.fetch(fetchDescriptor)
-        try #require(items.first != nil)
-        let firstItemAfterUpdate = items.first!
-        
-        #expect(firstItemAfterUpdate.createTimestamp == originalCreateTimestamp)
-        #expect(firstItemAfterUpdate.timestamp == updatedDate)
+        let repo = FavoriteStationRepository(context: container.mainContext)
+
+        let t = Date(timeIntervalSince1970: 1_000)
+
+        try repo.updateFavoriteStation(
+            name: "Wien",
+            hzbnr: 42,
+            unit: "m³/s",
+            newValue: 10.0,
+            lastTimeOfMeasurement: t
+        )
+        try repo.updateFavoriteStation(
+            name: "Wien",
+            hzbnr: 42,
+            unit: "m³/s",
+            newValue: 11.0,
+            lastTimeOfMeasurement: t
+        )
+
+        let station = try #require(
+            try container.mainContext.fetch(FetchDescriptor<FavoriteStation>()).first
+        )
+        #expect(station.value == [10.0, 11.0])
+        #expect(station.lastTimeOfMeasurement == t)
     }
-    
+
+    /// Contract 3: a strictly OLDER measurement must NOT append and must NOT rewind the
+    /// timestamp, even though metadata (name/unit) is still overwritten.
     @Test
-    func testUpdateItemOnDeletedItemDoesNothing() async throws {
-        // Arrange
+    func doesNotAppendOrRewindWhenMeasurementOlder() throws {
         let container = try SwiftDataContainerForTest.temp(#function)
-        let handler = CurrentScheme.DataHandler(modelContainer: container)
-        
-        let originalDate = Date(timeIntervalSince1970: 0)
-        let updatedDate = Date(timeIntervalSince1970: 200)
-        
-        // Create and immediately delete the item
-        let id = try await handler.newItem(date: originalDate)
-        try await handler.deleteItem(id: id)
-        
-        // Act – updating a deleted item should not crash and not recreate the item
-        try await handler.updateItem(id: id, timestamp: updatedDate)
-        
-        // Assert – store should still be empty
-        let fetchDescriptor = FetchDescriptor<CurrentScheme.Item>()
-        let items = try container.mainContext.fetch(fetchDescriptor)
-        
-        #expect(items.count == 0)
+        let repo = FavoriteStationRepository(context: container.mainContext)
+
+        let newer = Date(timeIntervalSince1970: 2_000)
+        let older = Date(timeIntervalSince1970: 1_000)
+
+        try repo.updateFavoriteStation(
+            name: "Wien",
+            hzbnr: 42,
+            unit: "m³/s",
+            newValue: 10.0,
+            lastTimeOfMeasurement: newer
+        )
+        try repo.updateFavoriteStation(
+            name: "Wien-Alt",
+            hzbnr: 42,
+            unit: "cm",
+            newValue: 99.0,
+            lastTimeOfMeasurement: older
+        )
+
+        let station = try #require(
+            try container.mainContext.fetch(FetchDescriptor<FavoriteStation>()).first
+        )
+        // measurement gate held: no append, no rewind
+        #expect(station.value == [10.0])
+        #expect(station.lastTimeOfMeasurement == newer)
+        // metadata still overwritten
+        #expect(station.name == "Wien-Alt")
+        #expect(station.unit == "cm")
     }
-    
+
     // MARK: - Delete
-    
+
+    /// Contract 4: `isFavorite: false` on an EXISTING row deletes it.
     @Test
-    func testDeleteItemRemovesItem() async throws {
-        // Arrange
+    func deletesExistingRowWhenIsFavoriteFalse() throws {
         let container = try SwiftDataContainerForTest.temp(#function)
-        let handler = CurrentScheme.DataHandler(modelContainer: container)
-        
-        let date = Date(timeIntervalSince1970: 0)
-        let id = try await handler.newItem(date: date)
-        
-        // Sanity check before delete
-        var fetchDescriptor = FetchDescriptor<CurrentScheme.Item>()
-        var items = try container.mainContext.fetch(fetchDescriptor)
-        #expect(items.count == 1)
-        
-        // Act
-        try await handler.deleteItem(id: id)
-        
-        // Assert
-        fetchDescriptor = FetchDescriptor<CurrentScheme.Item>()
-        items = try container.mainContext.fetch(fetchDescriptor)
-        
-        #expect(items.count == 0)
+        let repo = FavoriteStationRepository(context: container.mainContext)
+
+        try repo.updateFavoriteStation(
+            name: "Wien",
+            hzbnr: 42,
+            unit: "m³/s",
+            newValue: 10.0,
+            lastTimeOfMeasurement: Date(timeIntervalSince1970: 1_000),
+            isFavorite: true
+        )
+        #expect(try container.mainContext.fetch(FetchDescriptor<FavoriteStation>()).count == 1)
+
+        try repo.updateFavoriteStation(
+            name: "Wien",
+            hzbnr: 42,
+            unit: "m³/s",
+            newValue: 11.0,
+            lastTimeOfMeasurement: Date(timeIntervalSince1970: 2_000),
+            isFavorite: false
+        )
+
+        let rows = try container.mainContext.fetch(FetchDescriptor<FavoriteStation>())
+        #expect(rows.count == 0)
     }
-    
+
+    // MARK: - Forecast
+
+    /// Contract 6: a forecast attached to an existing favourite survives the SwiftData
+    /// Codable round-trip — issuedAt, point ordering, scalar fields, and the optional
+    /// floodFlags dictionary all come back intact after a fresh fetch.
     @Test
-    func testDeleteItemOnAlreadyDeletedIdDoesNotCrash() async throws {
-        // Arrange
+    func forecastSurvivesCodableRoundTrip() throws {
         let container = try SwiftDataContainerForTest.temp(#function)
-        let handler = CurrentScheme.DataHandler(modelContainer: container)
-        
-        let date = Date(timeIntervalSince1970: 0)
-        let id = try await handler.newItem(date: date)
-        
-        // First delete
-        try await handler.deleteItem(id: id)
-        
-        // Act – second delete on the same id (no item should be found)
-        try await handler.deleteItem(id: id)
-        
-        // Assert – still no items, but operation should be safe
-        let fetchDescriptor = FetchDescriptor<CurrentScheme.Item>()
-        let items = try container.mainContext.fetch(fetchDescriptor)
-        
-        #expect(items.count == 0)
+        let repo = FavoriteStationRepository(context: container.mainContext)
+
+        try repo.updateFavoriteStation(
+            name: "Wien",
+            hzbnr: 42,
+            unit: "m³/s",
+            newValue: 10.0,
+            lastTimeOfMeasurement: Date(timeIntervalSince1970: 1_000)
+        )
+
+        let issued = Date(timeIntervalSince1970: 1_700_000_000)
+        let forecast = StoredForecast(
+            issuedAt: issued,
+            points: [
+                StoredForecast.Point(
+                    horizonH: 6,
+                    qPred: 12.5,
+                    floodFlags: ["HQ1": true, "HQ5": false]
+                ),
+                StoredForecast.Point(horizonH: 12, qPred: 20.0, floodFlags: nil),
+            ]
+        )
+        try repo.updateFavoriteForecast(hzbnr: 42, forecast: forecast)
+
+        let station = try #require(
+            try container.mainContext.fetch(FetchDescriptor<FavoriteStation>()).first
+        )
+        let stored = try #require(station.forecast)
+
+        #expect(stored.issuedAt == issued)
+        #expect(stored.points.count == 2)
+
+        let first = try #require(stored.points.first)
+        #expect(first.horizonH == 6)
+        #expect(first.qPred == 12.5)
+        #expect(first.floodFlags == ["HQ1": true, "HQ5": false])
+
+        let second = stored.points[1]
+        #expect(second.horizonH == 12)
+        #expect(second.qPred == 20.0)
+        #expect(second.floodFlags == nil)
     }
-    
-    // MARK: - Multiple Items
-    
+
+    /// Contract 7: `updateFavoriteForecast` for an absent hzbnr is a silent no-op —
+    /// it neither throws nor inserts a row.
     @Test
-    func testUpdatingOneItemDoesNotAffectOthers() async throws {
-        // Arrange
+    func forecastUpdateIsNoOpWhenStationAbsent() throws {
         let container = try SwiftDataContainerForTest.temp(#function)
-        let handler = CurrentScheme.DataHandler(modelContainer: container)
-        
-        let date1 = Date(timeIntervalSince1970: 0)
-        let date2 = Date(timeIntervalSince1970: 50)
-        let updatedDate1 = Date(timeIntervalSince1970: 100)
-        
-        let id1 = try await handler.newItem(date: date1)
-        let id2 = try await handler.newItem(date: date2)
-        
-        // Act – update only the first item
-        try await handler.updateItem(id: id1, timestamp: updatedDate1)
-        
-        // Assert
-        let fetchDescriptor = FetchDescriptor<CurrentScheme.Item>()
-        let items = try container.mainContext.fetch(fetchDescriptor)
-        
-        #expect(items.count == 2)
-        
-        // Sort items for deterministic order
-        let sortedItems = items.sorted { $0.timestamp < $1.timestamp }
-        
-        // Find items by id
-        try #require(sortedItems.first(where: { $0.persistentModelID == id1 }) != nil)
-        try #require(sortedItems.first(where: { $0.persistentModelID == id2 }) != nil)
-        
-        let item1 = sortedItems.first(where: { $0.persistentModelID == id1 })!
-        let item2 = sortedItems.first(where: { $0.persistentModelID == id2 })!
-        
-        #expect(item1.timestamp == updatedDate1)
-        #expect(item2.timestamp == date2)
-    }
-    
-    @Test
-    func testDeletingOneItemDoesNotDeleteOthers() async throws {
-        // Arrange
-        let container = try SwiftDataContainerForTest.temp(#function)
-        let handler = CurrentScheme.DataHandler(modelContainer: container)
-        
-        let date1 = Date(timeIntervalSince1970: 0)
-        let date2 = Date(timeIntervalSince1970: 50)
-        
-        let id1 = try await handler.newItem(date: date1)
-        let id2 = try await handler.newItem(date: date2)
-        
-        // Act – delete only the first item
-        try await handler.deleteItem(id: id1)
-        
-        // Assert
-        let fetchDescriptor = FetchDescriptor<CurrentScheme.Item>()
-        let items = try container.mainContext.fetch(fetchDescriptor)
-        
-        #expect(items.count == 1)
-        
-        try #require(items.first != nil)
-        let remainingItem = items.first!
-        
-        #expect(remainingItem.persistentModelID == id2)
-        #expect(remainingItem.timestamp == date2)
+        let repo = FavoriteStationRepository(context: container.mainContext)
+
+        let forecast = StoredForecast(
+            issuedAt: Date(timeIntervalSince1970: 1_700_000_000),
+            points: [StoredForecast.Point(horizonH: 6, qPred: 1.0)]
+        )
+        try repo.updateFavoriteForecast(hzbnr: 999, forecast: forecast)
+
+        let rows = try container.mainContext.fetch(FetchDescriptor<FavoriteStation>())
+        #expect(rows.count == 0)
     }
 }
