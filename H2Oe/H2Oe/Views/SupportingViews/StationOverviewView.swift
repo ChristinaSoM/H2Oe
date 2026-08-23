@@ -53,7 +53,7 @@ struct StationOverviewView: View {
                             lastTimeOfMeasurement: station.timeOfMeasurement
                         )
                     }
-                    FloodWarningBadge(warning: FloodWarning(forecast: forecastStore?.forecast(for: station.hzbnr)))
+                    FloodWarningBadge(forecast: forecastStore?.forecast(for: station.hzbnr), showsWhenClear: true)
                 }
                 VStack(alignment: .leading) {
                     Text("HZBNR \(String(station.hzbnr))")

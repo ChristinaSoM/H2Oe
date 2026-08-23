@@ -220,25 +220,25 @@ struct StationDetailView: View {
         .padding(.top, 8)
     }
 
-    private var warning: FloodWarning {
-        FloodWarning(forecast: forecastStore?.forecast(for: station.hzbnr))
-    }
-
     @ViewBuilder
     private var forecastSection: some View {
         VStack(alignment: .leading, spacing: 10) {
             HStack {
-                Text("Discharge forecast")
+                Text("Forecast")
                     .font(.title2)
                     .bold()
                 Spacer()
-                FloodWarningBadge(warning: warning)
+                FloodWarningBadge(forecast: forecastStore?.forecast(for: station.hzbnr),
+                                  showsWhenClear: true)
             }
             .padding(.horizontal)
             .padding(.top, 12)
 
+            AIGeneratedNote()
+                .padding(.horizontal)
+
             if forecastLoading {
-                HStack {
+                HStack(spacing: 8) {
                     ProgressView()
                     Text("Loading forecast…")
                         .foregroundStyle(.secondary)
@@ -247,14 +247,20 @@ struct StationDetailView: View {
 
             } else if let forecastError {
                 Text(forecastError)
+                    .font(.callout)
                     .foregroundStyle(.red)
+                    .multilineTextAlignment(.leading)
+                    .fixedSize(horizontal: false, vertical: true)
                     .padding(.horizontal)
 
             } else if let store = forecastStore,
                       let forecast = store.forecast(for: station.hzbnr),
-                      forecast.ok, let predictions = forecast.predictions {
+                      forecast.ok, let predictions = forecast.predictions, !predictions.isEmpty {
+                let sorted = predictions.sorted { $0.horizonH < $1.horizonH }
+
+                forecastSubHeader("Flow rate (Q)")
                 infoCard {
-                    ForEach(predictions.sorted { $0.horizonH < $1.horizonH }) { prediction in
+                    ForEach(sorted) { prediction in
                         HStack(alignment: .firstTextBaseline) {
                             Text(horizonLabel(prediction.horizonH))
                                 .font(.subheadline)
@@ -263,46 +269,75 @@ struct StationDetailView: View {
                             Text(String(format: "%.1f m³/s", prediction.qPred))
                                 .font(.body.monospacedDigit())
                         }
-                        if let hq = prediction.hq {
-                            let exceeded = hq.filter { $0.value.flag }.keys.sorted()
-                            let level = hq
-                                .compactMap { $0.value.flag ? FloodWarning.returnPeriod(fromKey: $0.key) : nil }
-                                .filter { $0 >= 5 }
-                                .map(FloodWarningLevel.forReturnPeriod)
-                                .max() ?? .none
-                            HStack(spacing: 6) {
-                                if level != .none {
-                                    Image(systemName: level.symbolName)
-                                        .font(.caption2)
-                                        .accessibilityHidden(true)
-                                }
-                                Text(exceeded.isEmpty
-                                     ? "No flood-level exceedance"
-                                     : "Flood warning: \(exceeded.joined(separator: ", "))")
-                                    .font(.caption)
-                                    .bold(level != .none)
-                            }
-                            .foregroundStyle(level == .none ? Color.secondary : level.tint)
-                        }
-                        Divider()
+                        if prediction.id != sorted.last?.id { Divider() }
                     }
                 }
-                AIGeneratedNote()
-                    .padding(.horizontal)
+
+                forecastSubHeader("Flood level (HQ)")
+                infoCard {
+                    ForEach(sorted) { prediction in
+                        floodRow(for: prediction)
+                        if prediction.id != sorted.last?.id { Divider() }
+                    }
+                }
 
             } else if let store = forecastStore,
                       let forecast = store.forecast(for: station.hzbnr), !forecast.ok {
                 Text(forecast.error ?? "No forecast available for this station.")
+                    .font(.callout)
                     .foregroundStyle(.secondary)
+                    .fixedSize(horizontal: false, vertical: true)
                     .padding(.horizontal)
 
             } else {
-                Text("No forecast available.")
+                Text("No forecast available for this station.")
+                    .font(.callout)
                     .foregroundStyle(.secondary)
+                    .fixedSize(horizontal: false, vertical: true)
                     .padding(.horizontal)
             }
         }
         .padding(.top, 8)
+    }
+
+    private func forecastSubHeader(_ title: String) -> some View {
+        Text(title)
+            .font(.headline)
+            .foregroundStyle(.primary)
+            .frame(maxWidth: .infinity, alignment: .leading)
+            .padding(.horizontal)
+            .padding(.top, 2)
+    }
+
+    @ViewBuilder
+    private func floodRow(for prediction: ForecastPrediction) -> some View {
+        HStack(alignment: .firstTextBaseline, spacing: 6) {
+            Text(horizonLabel(prediction.horizonH))
+                .font(.subheadline)
+                .foregroundStyle(.secondary)
+            Spacer()
+            if let hq = prediction.hq {
+                let exceeded = hq.filter { $0.value.flag }.keys.sorted()
+                let level = hq
+                    .compactMap { $0.value.flag ? FloodWarning.returnPeriod(fromKey: $0.key) : nil }
+                    .filter { $0 >= 5 }
+                    .map(FloodWarningLevel.forReturnPeriod)
+                    .max() ?? .none
+                if level != .none {
+                    Image(systemName: level.symbolName)
+                        .font(.caption)
+                        .accessibilityHidden(true)
+                }
+                Text(exceeded.isEmpty ? "No exceedance" : exceeded.joined(separator: ", "))
+                    .font(.subheadline)
+                    .bold(level != .none)
+                    .foregroundStyle(level == .none ? Color.secondary : level.tint)
+            } else {
+                Text("No flood data")
+                    .font(.subheadline)
+                    .foregroundStyle(.secondary)
+            }
+        }
     }
 
     private func horizonLabel(_ horizon: Int) -> String {

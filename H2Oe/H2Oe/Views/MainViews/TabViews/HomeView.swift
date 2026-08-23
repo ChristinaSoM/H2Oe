@@ -50,6 +50,10 @@ struct HomeView: View {
                     .frame(maxWidth: .infinity, alignment: .center)
                     .padding(.horizontal)
                 
+                forecastStatusView
+                    .frame(maxWidth: .infinity, alignment: .center)
+                    .padding(.horizontal)
+                
                 mapCard
                     .padding(.horizontal)
                     .padding(.bottom, 8)
@@ -118,6 +122,44 @@ struct HomeView: View {
                 EmptyView()
             }
         }
+    }
+
+    private var highestWarning: FloodWarningLevel {
+        warningByHzbnr.values.map(\.level).max() ?? .none
+    }
+
+    @ViewBuilder
+    private var forecastStatusView: some View {
+        if let store = forecastStore, store.isLoading {
+            statusPill(symbol: nil, text: "Loading forecasts & warnings…", tint: .secondary)
+        } else if !warningByHzbnr.isEmpty {
+            statusPill(symbol: highestWarning.symbolName,
+                       text: "\(warningByHzbnr.count) active flood warning\(warningByHzbnr.count == 1 ? "" : "s")",
+                       tint: highestWarning.tint)
+        } else if forecastStore?.errorText != nil {
+            statusPill(symbol: "cloud.slash", text: "Forecasts unavailable", tint: .secondary)
+        } else if forecastStore?.issuedAt != nil {
+            statusPill(symbol: "checkmark.circle.fill", text: "No active flood warnings", tint: .green)
+        }
+    }
+
+    private func statusPill(symbol: String?, text: String, tint: Color) -> some View {
+        HStack(spacing: 8) {
+            if let symbol {
+                Image(systemName: symbol).accessibilityHidden(true)
+            } else {
+                ProgressView()
+            }
+            Text(text).font(.footnote.weight(.semibold))
+        }
+        .foregroundStyle(tint)
+        .padding(.vertical, 8)
+        .padding(.horizontal, 14)
+        .frame(minHeight: 28)
+        .background(.ultraThinMaterial, in: Capsule())
+        .overlay(Capsule().strokeBorder(tint.opacity(0.4), lineWidth: 1))
+        .accessibilityElement(children: .ignore)
+        .accessibilityLabel(text)
     }
     
     

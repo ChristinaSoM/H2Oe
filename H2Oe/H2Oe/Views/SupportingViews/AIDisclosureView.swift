@@ -35,9 +35,12 @@ struct AIDisclosureView: View {
                     row("exclamationmark.triangle", "They are not official flood warnings and must not be the only basis for safety decisions.")
                     row("checkmark.shield", "In an emergency, always follow the official warnings of the responsible authorities.")
 
-                    Link("Official water levels & warnings: noe.gv.at",
-                         destination: URL(string: "https://www.noel.gv.at/wasserstand/")!)
-                        .font(.footnote)
+                    Link(destination: URL(string: "https://www.noel.gv.at/wasserstand/")!) {
+                        Text("Official water levels & warnings: noe.gv.at")
+                            .font(.footnote)
+                            .frame(minHeight: 44, alignment: .leading)
+                            .contentShape(Rectangle())
+                    }
                 }
                 .padding(24)
             }

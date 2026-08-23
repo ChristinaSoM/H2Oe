@@ -31,8 +31,11 @@ struct FavoriteButton: View {
             Image(systemName: isFavorite ? "star.fill" : "star")
                 .font(.title3)
                 .foregroundStyle(isFavorite ? .blue : .gray)
+                .frame(minWidth: 44, minHeight: 44)
+                .contentShape(Rectangle())
         }
         .buttonStyle(.plain)
+        .accessibilityLabel(isFavorite ? "Remove from favourites" : "Add to favourites")
     }
     
     @MainActor

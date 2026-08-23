@@ -109,7 +109,7 @@ struct StationsListView: View {
                     .foregroundStyle(.primary)
                     .lineLimit(1)
                 
-                FloodWarningBadge(warning: FloodWarning(forecast: forecastStore?.forecast(for: station.hzbnr)))
+                FloodWarningBadge(forecast: forecastStore?.forecast(for: station.hzbnr))
                 
                 VStack(spacing: 10) {
                     HStack {

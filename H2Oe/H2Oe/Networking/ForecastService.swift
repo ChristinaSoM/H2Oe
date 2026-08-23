@@ -99,7 +99,8 @@ func fetchForecastsBatch(
         prognoseBaseURL + "/predict_batch",
         method: .get,
         parameters: parameters,
-        encoding: URLEncoding.default
+        encoding: URLEncoding.default,
+        requestModifier: { $0.timeoutInterval = 90 }
     )
     .validate(statusCode: 200..<300)
     .responseDecodable(of: BatchForecastResponse.self, decoder: forecastDecoder) { response in
@@ -126,7 +127,8 @@ func fetchForecast(
         prognoseBaseURL + "/predict",
         method: .get,
         parameters: parameters,
-        encoding: URLEncoding.default
+        encoding: URLEncoding.default,
+        requestModifier: { $0.timeoutInterval = 45 }
     )
     .validate(statusCode: 200..<300)
     .responseDecodable(of: ForecastResponse.self, decoder: forecastDecoder) { response in
