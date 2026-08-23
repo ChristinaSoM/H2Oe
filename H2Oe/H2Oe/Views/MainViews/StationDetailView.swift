@@ -265,12 +265,24 @@ struct StationDetailView: View {
                         }
                         if let hq = prediction.hq {
                             let exceeded = hq.filter { $0.value.flag }.keys.sorted()
-                            Text(exceeded.isEmpty
-                                 ? "No flood-level exceedance"
-                                 : "Flood warning: \(exceeded.joined(separator: ", "))")
-                                .font(.caption)
-                                .bold(!exceeded.isEmpty)
-                                .foregroundStyle(exceeded.isEmpty ? Color.secondary : Color.orange)
+                            let level = hq
+                                .compactMap { $0.value.flag ? FloodWarning.returnPeriod(fromKey: $0.key) : nil }
+                                .filter { $0 >= 5 }
+                                .map(FloodWarningLevel.forReturnPeriod)
+                                .max() ?? .none
+                            HStack(spacing: 6) {
+                                if level != .none {
+                                    Image(systemName: level.symbolName)
+                                        .font(.caption2)
+                                        .accessibilityHidden(true)
+                                }
+                                Text(exceeded.isEmpty
+                                     ? "No flood-level exceedance"
+                                     : "Flood warning: \(exceeded.joined(separator: ", "))")
+                                    .font(.caption)
+                                    .bold(level != .none)
+                            }
+                            .foregroundStyle(level == .none ? Color.secondary : level.tint)
                         }
                         Divider()
                     }
