@@ -13,12 +13,15 @@ served as an HTTP prediction API (see [Forecast model & API](#forecast-model--ap
 ## Features
 
 - **Live discharge stations** — current discharge (Q, m³/s) for Lower-Austrian
-  gauging stations, pulled from the state's official WFS hydro service.
+  gauging stations, pulled from the state's official LFRZ OGC API Features service.
 - **3-day discharge forecast** — predicted discharge at four lead times
   (**0 / 24 / 48 / 72 h**) per station, from the Ridge model.
-- **Flood warnings** — optional HQ flood-exceedance flags per return-period
-  level (**HQ1 / HQ5 / HQ30 / HQ100**); the station detail surfaces an explicit
-  "Flood warning" when a level is exceeded.
+- **Flood warning levels** — each station derives a severity from the forecast's
+  HQ flood-exceedance flags. Warnings start at **HQ5** and are colour-coded
+  **yellow (HQ5) → orange (HQ30) → red (HQ100+)**, shown on the map markers and
+  as a badge on every station; an icon + label back up the colour (never colour alone).
+- **AI transparency** — a first-launch notice (EU AI Act, Art. 50) plus an inline
+  hint disclose that forecasts and warnings are AI-generated and not official.
 - **Favourites, offline-capable** — mark stations as favourites; their last-known
   measured values *and* last-known forecast are persisted on device (SwiftData),
   so favourites still show meaningful data without a network connection.
@@ -35,7 +38,7 @@ The UI is organised into four tabs: **Home**, **Stations**, **Favourites**,
 
 ```mermaid
 flowchart LR
-    WFS[LFRZ WFS\nlive discharge Q] --> App[H2Oe iOS app]
+    WFS[LFRZ OGC API\nlive discharge Q] --> App[H2Oe iOS app]
     GEO[GeoSphere Austria\nhistorical climate] --> App
     API[Prognose-API\nRidge forecast] --> App
     App --> SD[(SwiftData\nfavourites + last-known forecast)]
@@ -45,7 +48,7 @@ The app talks to three backends:
 
 | Source | What | Base URL |
 |--------|------|----------|
-| **LFRZ WFS** (Land NÖ) | Live discharge (Q) stations, filtered to `hydrodienst='Niederösterreich' AND parameter='Q'` | `https://gis.lfrz.gv.at/wmsgw/` |
+| **LFRZ OGC API Features** (Land NÖ) | Live discharge (Q) stations, filtered via CQL2 (`parameter='Q' AND hydrodienst='Niederösterreich'`) | `https://gis.lfrz.gv.at/api/geodata/i000501/ogc/features/v1/collections/i000501:pegel_aktuell/items` |
 | **GeoSphere Austria** | Historical 10-min climate parameters per station | `https://dataset.api.hub.geosphere.at/v1/station/historical/klima-v2-10min` |
 | **H2Oe Prognose-API** | Ridge discharge/HQ forecast | `https://h2oe-prognose.duckdns.org` |
 
