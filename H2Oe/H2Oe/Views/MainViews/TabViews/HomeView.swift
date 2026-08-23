@@ -91,16 +91,18 @@ struct HomeView: View {
                 .padding(.horizontal, 14)
                 .background(.ultraThinMaterial, in: Capsule())
             } else if let errorText {
-                HStack(spacing: 8) {
+                HStack(alignment: .top, spacing: 8) {
                     Image(systemName: "exclamationmark.triangle.fill")
                         .foregroundStyle(.orange)
                     Text(errorText)
                         .font(.footnote)
-                        .lineLimit(2)
+                        .multilineTextAlignment(.leading)
+                        .fixedSize(horizontal: false, vertical: true)
                 }
+                .frame(maxWidth: .infinity, alignment: .leading)
                 .padding(.vertical, 8)
                 .padding(.horizontal, 14)
-                .background(.ultraThinMaterial, in: Capsule())
+                .background(.ultraThinMaterial, in: RoundedRectangle(cornerRadius: 14, style: .continuous))
             } else {
                 EmptyView()
             }
