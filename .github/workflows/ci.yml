@@ -24,15 +24,16 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
-      # Secrets.xcconfig is gitignored (it holds the public WFS build key) but is
-      # the app target's base configuration AND a bundled resource, so the build
-      # needs the file to exist. Recreate it from a repo secret; an empty value
-      # is fine for build/tests (the key is only used for live WFS requests at
-      # runtime, which the tests do not exercise).
+      # Secrets.xcconfig is gitignored (it holds the WFS build key) but is the
+      # app target's base configuration reference, so the build needs the file
+      # to exist at H2Oe/Secrets.xcconfig (next to the .xcodeproj). Recreate it
+      # from a repo secret; an empty value is fine for build/tests (the key is
+      # only used for live WFS requests at runtime, which the tests do not
+      # exercise).
       - name: Create Secrets.xcconfig
         run: |
-          mkdir -p H2Oe/H2Oe
-          echo "WMSGW_API_KEY = ${{ secrets.WMSGW_API_KEY }}" > H2Oe/H2Oe/Secrets.xcconfig
+          mkdir -p H2Oe
+          echo "WMSGW_API_KEY = ${{ secrets.WMSGW_API_KEY }}" > H2Oe/Secrets.xcconfig
 
       - name: Show toolchain
         run: xcodebuild -version
