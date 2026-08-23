@@ -11,6 +11,9 @@ struct StationDetailView: View {
     @State private var errorMessage: String?
     @State private var geosphereId: Int?
     @State private var geosphereData: GeosphereFeatureCollection?
+    @Environment(ForecastStore.self) private var forecastStore: ForecastStore?
+    @State private var forecastError: String?
+    @State private var forecastLoading = false
     
     var body: some View {
         ScrollView {
@@ -37,6 +40,7 @@ struct StationDetailView: View {
                 .padding(.horizontal)
                 
                 qHeader
+                forecastSection
                 stationInfoCard
                 geosphereSection
             }
@@ -47,7 +51,8 @@ struct StationDetailView: View {
         .toolbarBackground(.ultraThinMaterial, for: .navigationBar)
         .toolbarBackground(Color.cyan.opacity(0.15), for: .navigationBar)
         .toolbarBackground(.visible, for: .navigationBar)
-        .task(id: station.hzbnr) { //if hzbnr changes geosphere data is fetched
+        .task(id: station.hzbnr) { //load weather + forecast for this station
+            await loadForecastIfNeeded()
             await loadGeosphere()
         }
     }
@@ -219,6 +224,88 @@ struct StationDetailView: View {
             }
         }
         .padding(.top, 8)
+    }
+
+    @ViewBuilder
+    private var forecastSection: some View {
+        VStack(alignment: .leading, spacing: 10) {
+            HStack {
+                Text("Discharge forecast")
+                    .font(.title2)
+                    .bold()
+                Spacer()
+            }
+            .padding(.horizontal)
+            .padding(.top, 12)
+
+            if forecastLoading {
+                HStack {
+                    ProgressView()
+                    Text("Loading forecast…")
+                        .foregroundStyle(.secondary)
+                }
+                .padding(.horizontal)
+
+            } else if let forecastError {
+                Text(forecastError)
+                    .foregroundStyle(.red)
+                    .padding(.horizontal)
+
+            } else if let store = forecastStore,
+                      let forecast = store.forecast(for: station.hzbnr),
+                      forecast.ok, let predictions = forecast.predictions {
+                infoCard {
+                    ForEach(predictions.sorted { $0.horizonH < $1.horizonH }) { prediction in
+                        HStack(alignment: .firstTextBaseline) {
+                            Text(horizonLabel(prediction.horizonH))
+                                .font(.subheadline)
+                                .foregroundStyle(.secondary)
+                            Spacer()
+                            Text(String(format: "%.1f m³/s", prediction.qPred))
+                                .font(.body.monospacedDigit())
+                        }
+                        if let hq = prediction.hq {
+                            let exceeded = hq.filter { $0.value.flag }.keys.sorted()
+                            Text(exceeded.isEmpty
+                                 ? "No flood-level exceedance"
+                                 : "Flood warning: \(exceeded.joined(separator: ", "))")
+                                .font(.caption)
+                                .bold(!exceeded.isEmpty)
+                                .foregroundStyle(exceeded.isEmpty ? .secondary : .orange)
+                        }
+                        Divider()
+                    }
+                }
+
+            } else if let store = forecastStore,
+                      let forecast = store.forecast(for: station.hzbnr), !forecast.ok {
+                Text(forecast.error ?? "No forecast available for this station.")
+                    .foregroundStyle(.secondary)
+                    .padding(.horizontal)
+
+            } else {
+                Text("No forecast available.")
+                    .foregroundStyle(.secondary)
+                    .padding(.horizontal)
+            }
+        }
+        .padding(.top, 8)
+    }
+
+    private func horizonLabel(_ horizon: Int) -> String {
+        horizon == 0 ? "Now" : "+\(horizon) h"
+    }
+
+    /// The app-open batch usually already holds this station; fetch a single
+    /// station only as a fallback (e.g. a favourite missing from the batch).
+    @MainActor
+    private func loadForecastIfNeeded() async {
+        guard let store = forecastStore else { return }
+        guard store.forecast(for: station.hzbnr) == nil else { return }
+        forecastLoading = true
+        forecastError = nil
+        forecastError = await store.loadSingle(hzbnr: station.hzbnr)
+        forecastLoading = false
     }
     
     

@@ -26,6 +26,7 @@ struct ContentView: View {
     @State private var errorText: String?
     @State private var isLoading = false
     @State private var selectedTab: Tabs = .home
+    @State private var forecastStore = ForecastStore()
     
 
     var body: some View {
@@ -51,6 +52,7 @@ struct ContentView: View {
         }
         .toolbarBackground(.ultraThinMaterial, for: .tabBar)
         .toolbarBackground(.visible, for: .tabBar)
+        .environment(forecastStore)
     }
 
     @MainActor
@@ -70,6 +72,8 @@ struct ContentView: View {
                         stations = data.features
                         Task { @MainActor in  //extra task for not blocking the UI
                             await updateFavoritesFromStations(stations)
+                            await forecastStore.loadBatch(hzbnrs: stations.map(\.hzbnr))
+                            await persistFavoriteForecasts()
                         }
                     case .failure(let error):
                         stations = []
@@ -101,6 +105,24 @@ struct ContentView: View {
             }
         } catch {
             print("Failed to refresh favorite values: \(error)")
+        }
+    }
+
+    /// Store the freshly fetched forecast on each favourite so it survives
+    /// offline (like the measured values already do).
+    @MainActor
+    private func persistFavoriteForecasts() async {
+        guard let issuedAt = forecastStore.issuedAt else { return }
+        do {
+            let repo = FavoriteStationRepository(context: modelContext)
+            for fav in favorites {
+                if let forecast = forecastStore.forecast(for: fav.hzbnr),
+                   let stored = ForecastStore.stored(from: forecast, issuedAt: issuedAt) {
+                    try repo.updateFavoriteForecast(hzbnr: fav.hzbnr, forecast: stored)
+                }
+            }
+        } catch {
+            print("Failed to persist favorite forecasts: \(error)")
         }
     }
 }
