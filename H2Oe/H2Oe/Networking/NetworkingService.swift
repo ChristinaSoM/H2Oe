@@ -9,37 +9,28 @@ import Alamofire
 import Foundation
 
 
-private let wfsBaseURL = "https://gis.lfrz.gv.at/wmsgw/"
+// Current gauge readings for Austria via the LFRZ "pegel_aktuell" OGC API
+// Features service (the former wmsgw WFS gateway was retired). No API key is
+// required. Data source: Bundesministerium für Land- und Forstwirtschaft,
+// Klima- und Umweltschutz, Regionen und Wasserwirtschaft (CC BY 4.0).
+private let pegelBaseURL = "https://gis.lfrz.gv.at/api/geodata/i000501/ogc/features/v1/collections/i000501:pegel_aktuell/items"
 
-private var wfsApiKey: String {
-    guard let apiKey = Bundle.main.object(forInfoDictionaryKey: "WFS_API_KEY") as? String else {
-        fatalError("plist file not found")
-    }
-    return apiKey
-}
-
-///Data source: Bundesministerium für Land- und Forstwirtschaft, Klima- und Umweltschutz, Regionen und Wasserwirtschaft
-///https://geoportal.inspire.gv.at/metadatensuche/inspire/api/records/9f700f35-c02f-42d3-99b8-28f23ee9bba5
-private var wfsParameters: [String: String] {
+private var pegelParameters: [String: String] {
     [
-        "key": wfsApiKey,
-        "SERVICE": "WFS",
-        "REQUEST": "GetFeature",
-        "VERSION": "2.0.0",
-        "TYPENAMES": "pegelaktuell",
-        "SRSNAME": "EPSG:4326",
-        "OUTPUTFORMAT": "application/json",
-        /// Currently, it is acceptable for me that only stations containing parameters and values are displayed:
-        "CQL_FILTER": "hydrodienst='Niederösterreich' AND parameter='Q' AND wert IS NOT NULL",
+        "f": "json",
+        "limit": "1000",
+        "filter-lang": "cql2-text",
+        // Only Lower-Austrian discharge (Q) stations that currently report a value.
+        "filter": "parameter='Q' AND hydrodienst='Niederösterreich' AND wert IS NOT NULL",
     ]
 }
 
 
 func fetchCurrentQStations(completionHandler: @escaping (Result<FeatureCollection, Error>) -> Void) {
     AF.request(
-        wfsBaseURL,
+        pegelBaseURL,
         method: .get,
-        parameters: wfsParameters,
+        parameters: pegelParameters,
         encoding: URLEncoding.default
     )
     .validate(statusCode: 200..<300)  //if error/no success: no decoding

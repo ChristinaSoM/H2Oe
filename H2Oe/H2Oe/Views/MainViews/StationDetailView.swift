@@ -148,12 +148,6 @@ struct StationDetailView: View {
                 }
                 
                 HStack {
-                    Text("DBMSNR").font(.footnote).foregroundStyle(.primary)
-                    Spacer()
-                    Text("\(String(station.dbmsnr))").font(.footnote).foregroundStyle(.primary)
-                }
-                
-                HStack {
                     Text("Waterbody").font(.footnote).foregroundStyle(.primary)
                     Spacer()
                     Text(station.waterBody).font(.footnote).foregroundStyle(.primary)

@@ -14,7 +14,6 @@ nonisolated struct FeatureCollection: Decodable, Sendable {
 nonisolated struct StationDetails: Decodable, Identifiable, Hashable, Sendable {
 
     let id: String
-    let dbmsnr: Int
     let name: String
     let hzbnr: Int
     let unit: String
@@ -29,11 +28,15 @@ nonisolated struct StationDetails: Decodable, Identifiable, Hashable, Sendable {
 
     private enum RootKeys: String, CodingKey {
         case id
+        case geometry
         case properties
     }
 
+    private enum GeometryKeys: String, CodingKey {
+        case coordinates
+    }
+
     private enum PropertiesKeys: String, CodingKey {
-        case dbmsnr
         case hzbnr
         case gewaesser
         case hydrodienst
@@ -42,8 +45,6 @@ nonisolated struct StationDetails: Decodable, Identifiable, Hashable, Sendable {
         case wert
         case einheit
         case zeitpunkt
-        case lon
-        case lat
     }
 
     init(from decoder: Decoder) throws {
@@ -51,34 +52,33 @@ nonisolated struct StationDetails: Decodable, Identifiable, Hashable, Sendable {
 
         id = try root.decode(String.self, forKey: .id)
 
-        let props = try root.nestedContainer(keyedBy: PropertiesKeys.self, forKey: .properties)
-        
-        dbmsnr = try props.decode(Int.self, forKey: .dbmsnr)
-        hzbnr = try props.decode(Int.self, forKey: .hzbnr)
-
-        waterBody = try props.decode(String.self, forKey: .gewaesser)
-        hydroService = try props.decodeIfPresent(String.self, forKey: .hydrodienst)
-
-        measuringPoint = try props.decode(String.self, forKey: .messstelle)
-        parameter = try props.decode(String.self, forKey: .parameter)
-
-        unit = try props.decode(String.self, forKey: .einheit)
-
-        let valueString = try props.decode(String.self, forKey: .wert)
-            .replacingOccurrences(of: ",", with: ".")
-
-        guard let parsedValue = Double(valueString) else {
+        // GeoJSON geometry carries the coordinate pair as [lon, lat].
+        let geometry = try root.nestedContainer(keyedBy: GeometryKeys.self, forKey: .geometry)
+        let coordinates = try geometry.decode([Double].self, forKey: .coordinates)
+        guard coordinates.count >= 2 else {
             throw DecodingError.dataCorruptedError(
-                forKey: .wert,
-                in: props,
-                debugDescription: "Value is not convertible to Double"
+                forKey: .coordinates,
+                in: geometry,
+                debugDescription: "Expected a [lon, lat] coordinate pair"
             )
         }
-        value = parsedValue
+        lon = coordinates[0]
+        lat = coordinates[1]
+
+        let props = try root.nestedContainer(keyedBy: PropertiesKeys.self, forKey: .properties)
+
+        hzbnr = try props.decode(Int.self, forKey: .hzbnr)
+        waterBody = try props.decode(String.self, forKey: .gewaesser)
+        hydroService = try props.decodeIfPresent(String.self, forKey: .hydrodienst)
+        measuringPoint = try props.decode(String.self, forKey: .messstelle)
+        parameter = try props.decode(String.self, forKey: .parameter)
+        unit = try props.decode(String.self, forKey: .einheit)
+        value = try props.decode(Double.self, forKey: .wert)
 
         let timeString = try props.decode(String.self, forKey: .zeitpunkt)
 
-        /// formatter that converts between dates and their ISO 8601 string representations
+        /// Timestamps arrive as ISO-8601 with an offset ("…+02:00"); tolerate a
+        /// fractional-seconds variant too.
         let formatterWithFraction = ISO8601DateFormatter()
         formatterWithFraction.formatOptions = [.withInternetDateTime, .withFractionalSeconds]
 
@@ -94,24 +94,6 @@ nonisolated struct StationDetails: Decodable, Identifiable, Hashable, Sendable {
                 debugDescription: "Invalid ISO8601 date format: \(timeString)"
             )
         }
-
-        let lonString = try props.decode(String.self, forKey: .lon)
-            .replacingOccurrences(of: ",", with: ".")
-
-        let latString = try props.decode(String.self, forKey: .lat)
-            .replacingOccurrences(of: ",", with: ".")
-
-        guard let lonDouble = Double(lonString),
-              let latDouble = Double(latString) else {
-            throw DecodingError.dataCorruptedError(
-                forKey: .lon,
-                in: props,
-                debugDescription: "Coordinates not convertible to Double"
-            )
-        }
-
-        lon = lonDouble
-        lat = latDouble
 
         name = measuringPoint
     }
