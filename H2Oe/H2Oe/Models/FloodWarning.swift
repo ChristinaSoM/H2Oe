@@ -11,6 +11,7 @@
 //
 
 import SwiftUI
+import DataProvider
 
 nonisolated enum FloodWarningLevel: Int, Comparable, CaseIterable, Sendable {
     case none = 0
@@ -87,6 +88,20 @@ nonisolated struct FloodWarning: Hashable, Sendable {
         for prediction in forecast?.predictions ?? [] {
             guard let hq = prediction.hq else { continue }
             for (key, hqLevel) in hq where hqLevel.flag {
+                guard let years = FloodWarning.returnPeriod(fromKey: key), years >= 5 else { continue }
+                maxYears = Swift.max(maxYears ?? years, years)
+            }
+        }
+        self.returnPeriod = maxYears
+        self.level = maxYears.map(FloodWarningLevel.forReturnPeriod) ?? .none
+    }
+
+    /// Derives the worst warning from a persisted (offline) forecast — used where
+    /// only the last-known StoredForecast is available (e.g. the favourites list).
+    init(stored: StoredForecast?) {
+        var maxYears: Int?
+        for point in stored?.points ?? [] {
+            for (key, flag) in point.floodFlags ?? [:] where flag {
                 guard let years = FloodWarning.returnPeriod(fromKey: key), years >= 5 else { continue }
                 maxYears = Swift.max(maxYears ?? years, years)
             }

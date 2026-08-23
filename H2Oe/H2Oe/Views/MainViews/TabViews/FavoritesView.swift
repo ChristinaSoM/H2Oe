@@ -44,6 +44,8 @@ struct FavoritesView: View {
                                 Text("Measured at: \(fav.lastTimeOfMeasurement.formatted(date: .abbreviated, time: .shortened))")
                                     .font(.subheadline)
                                     .foregroundStyle(.secondary)
+                                FloodWarningBadge(stored: fav.forecast, showsWhenClear: true)
+                                    .padding(.top, 2)
                             }
 
                             Spacer()

@@ -4,23 +4,36 @@
 //
 //  Compact flood-warning pill on the app's glass material, tinted by severity.
 //  Icon + text carry the meaning so it stays readable without colour (WCAG
-//  1.4.1). Derives its state from the station forecast:
-//    • a warning (HQ5+)      -> yellow/orange/red pill
-//    • forecast present, clear -> green "No warning" (only when showsWhenClear)
-//    • no/failed forecast    -> grey "Forecast unavailable" (only when showsWhenClear)
-//  In compact contexts (lists) it renders nothing unless there is a warning.
+//  1.4.1). Two sources:
+//    • init(forecast:) — the live ForecastStore entry (map, detail, list, sheet)
+//    • init(stored:)   — the persisted offline forecast (favourites list)
+//  States: a warning (HQ5+) -> yellow/orange/red; forecast present & clear ->
+//  green "No warning" (only when showsWhenClear); no/failed forecast -> grey
+//  "Forecast unavailable" (only when showsWhenClear). In compact contexts it
+//  renders nothing unless there is a warning.
 //
 
 import SwiftUI
+import DataProvider
 
 struct FloodWarningBadge: View {
-    let forecast: StationForecast?
-    var showsWhenClear: Bool = false
+    private let warning: FloodWarning
+    private let available: Bool
+    private let showsWhenClear: Bool
+
+    init(forecast: StationForecast?, showsWhenClear: Bool = false) {
+        self.warning = FloodWarning(forecast: forecast)
+        self.available = (forecast?.ok ?? false) && !(forecast?.predictions?.isEmpty ?? true)
+        self.showsWhenClear = showsWhenClear
+    }
+
+    init(stored: StoredForecast?, showsWhenClear: Bool = false) {
+        self.warning = FloodWarning(stored: stored)
+        self.available = !(stored?.points.isEmpty ?? true)
+        self.showsWhenClear = showsWhenClear
+    }
 
     var body: some View {
-        let warning = FloodWarning(forecast: forecast)
-        let available = (forecast?.ok ?? false) && !(forecast?.predictions?.isEmpty ?? true)
-
         if warning.isWarning {
             pill(symbol: warning.symbolName, text: warning.shortLabel,
                  tint: warning.tint, label: warning.title)
