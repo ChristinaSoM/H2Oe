@@ -51,9 +51,11 @@ struct StationDetailView: View {
         .toolbarBackground(.ultraThinMaterial, for: .navigationBar)
         .toolbarBackground(Color.cyan.opacity(0.15), for: .navigationBar)
         .toolbarBackground(.visible, for: .navigationBar)
-        .task(id: station.hzbnr) { //load weather + forecast for this station
-            await loadForecastIfNeeded()
-            await loadGeosphere()
+        .task(id: station.hzbnr) { // load forecast + weather concurrently so a slow
+                                   // forecast server never blocks the GeoSphere charts
+            async let forecast: Void = loadForecastIfNeeded()
+            async let geosphere: Void = loadGeosphere()
+            _ = await (forecast, geosphere)
         }
     }
 
