@@ -19,7 +19,6 @@ private var wfsApiKey: String {
 }
 
 ///Data source: Bundesministerium für Land- und Forstwirtschaft, Klima- und Umweltschutz, Regionen und Wasserwirtschaft
-///https://gis.lfrz.gv.at/wmsgw/?key=a64a0c9c9a692ed7041482cb6f03a40a&VERSION=2.0.0&REQUEST=GetCapabilities&SERVICE=WFS
 ///https://geoportal.inspire.gv.at/metadatensuche/inspire/api/records/9f700f35-c02f-42d3-99b8-28f23ee9bba5
 private var wfsParameters: [String: String] {
     [
