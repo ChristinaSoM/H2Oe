@@ -1,0 +1,56 @@
+name: CI
+
+# Build the H2Ö iOS app and run its tests before code reaches `main`, so a
+# broken build or failing test blocks the merge.
+#
+# Requirements on the runner: an Xcode with the iOS SDK matching the project's
+# deployment target (currently iOS 26 -> Xcode 26). `macos-latest` tracks the
+# newest image; pin a specific `macos-*` label if the default Xcode is older.
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
+concurrency:
+  group: ci-${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  build-test:
+    name: Build & test (iOS)
+    runs-on: macos-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      # Secrets.xcconfig is gitignored (it holds the public WFS build key) but is
+      # the app target's base configuration AND a bundled resource, so the build
+      # needs the file to exist. Recreate it from a repo secret; an empty value
+      # is fine for build/tests (the key is only used for live WFS requests at
+      # runtime, which the tests do not exercise).
+      - name: Create Secrets.xcconfig
+        run: |
+          mkdir -p H2Oe/H2Oe
+          echo "WMSGW_API_KEY = ${{ secrets.WMSGW_API_KEY }}" > H2Oe/H2Oe/Secrets.xcconfig
+
+      - name: Show toolchain
+        run: xcodebuild -version
+
+      # DataProvider is a standalone SwiftData package -> fast, self-contained
+      # unit tests (SchemaV1/V2, FavoriteStationRepository, StoredForecast).
+      - name: Test DataProvider package
+        run: swift test --package-path DataProvider
+
+      # Build the app and run the unit tests (H2OeTests) on an iOS simulator.
+      # No code signing is needed for a simulator build. UI tests (H2OeUITests)
+      # are intentionally excluded from the shared scheme (slow/flaky).
+      # Adjust the simulator `name` if the runner image ships a different device.
+      - name: Build & test app
+        run: |
+          xcodebuild test \
+            -project H2Oe/H2Oe.xcodeproj \
+            -scheme H2Oe \
+            -destination 'platform=iOS Simulator,name=iPhone 16,OS=latest' \
+            -skipMacroValidation \
+            CODE_SIGNING_ALLOWED=NO
