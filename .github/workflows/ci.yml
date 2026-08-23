@@ -45,12 +45,17 @@ jobs:
       # Build the app and run the unit tests (H2OeTests) on an iOS simulator.
       # No code signing is needed for a simulator build. UI tests (H2OeUITests)
       # are intentionally excluded from the shared scheme (slow/flaky).
-      # Adjust the simulator `name` if the runner image ships a different device.
+      # The simulator is picked dynamically (newest available iOS iPhone) so the
+      # job survives runner-image changes to device names and OS versions.
       - name: Build & test app
         run: |
+          set -euo pipefail
+          UDID=$(xcrun simctl list devices available --json | python3 -c 'import json,sys; d=json.load(sys.stdin)["devices"]; c=[(tuple(int(x) for x in r.rsplit("iOS-",1)[1].split("-")), v["udid"]) for r,ds in d.items() if "iOS-" in r for v in ds if v.get("isAvailable") and v["name"].startswith("iPhone")]; print(sorted(c)[-1][1] if c else "")')
+          if [ -z "$UDID" ]; then echo "No available iOS simulator found"; exit 1; fi
+          echo "Using simulator id=$UDID"
           xcodebuild test \
             -project H2Oe/H2Oe.xcodeproj \
             -scheme H2Oe \
-            -destination 'platform=iOS Simulator,name=iPhone 16,OS=latest' \
+            -destination "id=$UDID" \
             -skipMacroValidation \
             CODE_SIGNING_ALLOWED=NO
